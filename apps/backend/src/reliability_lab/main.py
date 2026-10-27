@@ -130,9 +130,15 @@ async def health() -> HealthResponse:
     return HealthResponse()
 
 
+@app.get("/session", response_model=HealthResponse)
+async def session_probe() -> HealthResponse:
+    """Protected readiness probe used by the native host to verify its own child."""
+    return HealthResponse()
+
+
 @app.post("/agent/query", response_model=AgentAnswer)
 async def query_agent(request: QueryRequest) -> AgentAnswer:
-    if request.provider == "openai" and not request.allow_external_transmission:
+    if request.provider != "mock" and not request.allow_external_transmission:
         from fastapi import HTTPException
 
         raise HTTPException(400, "Explicit external transmission consent is required.")

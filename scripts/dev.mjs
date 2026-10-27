@@ -93,7 +93,10 @@ try {
         signal: AbortSignal.timeout(500),
       });
       const body = await response.json();
-      healthy = response.ok && body.service === 'agent-reliability-lab' && body.mode === 'mock';
+      healthy =
+        response.ok &&
+        body.service === 'agent-reliability-lab' &&
+        ['mock', 'live'].includes(body.mode);
       if (healthy) break;
     } catch {
       /* Backend is still starting. */
@@ -101,7 +104,7 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   if (!healthy) throw new Error('Local backend did not become healthy within 15 seconds.');
-  console.log('Local backend ready · mock mode · http://127.0.0.1:8765');
+  console.log('Local backend ready · http://127.0.0.1:8765');
   if (mode === 'web') {
     start(
       process.execPath,

@@ -9,9 +9,20 @@ from reliability_lab.evaluation_service import RunRequest, perform_run, prepare_
 from reliability_lab.storage import get_store
 
 
-async def run(output: Path, top_k: int, label: str):
+async def run(
+    output: Path, top_k: int, label: str, provider: str, consent: bool, model: str | None
+):
     store = get_store()
-    experiment = await prepare_run(RunRequest(top_k=top_k, label=label), store)
+    experiment = await prepare_run(
+        RunRequest(
+            top_k=top_k,
+            label=label,
+            provider=provider,
+            model=model,
+            allow_external_transmission=consent,
+        ),
+        store,
+    )
     await perform_run(experiment["id"], store)
     result = store.run(experiment["id"])
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -33,5 +44,17 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, default=Path("docs/sample-evaluation-report.json"))
     parser.add_argument("--top-k", type=int, default=4, choices=range(1, 11))
     parser.add_argument("--label", default="Documented mock baseline")
+    parser.add_argument("--provider", choices=["mock", "gemini", "openai"], default="mock")
+    parser.add_argument("--model", default=None)
+    parser.add_argument("--allow-external", action="store_true")
     arguments = parser.parse_args()
-    asyncio.run(run(arguments.output, arguments.top_k, arguments.label))
+    asyncio.run(
+        run(
+            arguments.output,
+            arguments.top_k,
+            arguments.label,
+            arguments.provider,
+            arguments.allow_external,
+            arguments.model,
+        )
+    )

@@ -23,7 +23,8 @@ import { Overview } from './pages/Overview';
 import { WorkspacePage } from './pages/WorkspacePage';
 import { useHealth } from './hooks/useHealth';
 import { theme, md3 } from './theme';
-import type { ProviderName } from './api/execution';
+import { providerLabel, type ProviderName } from './api/execution';
+import { useConfig } from './hooks/useConfig';
 import './App.css';
 
 const descriptions: Record<Page, string> = {
@@ -36,7 +37,9 @@ const descriptions: Record<Page, string> = {
 };
 
 function Shell() {
-  const [providerMode, setProviderMode] = useState<ProviderName>('mock');
+  const [selectedProvider, setProviderMode] = useState<ProviderName | null>(null);
+  const { config } = useConfig();
+  const providerMode = selectedProvider ?? config?.default_provider ?? 'gemini';
   const [page, setPage] = useState<Page>('Overview');
   const [menuOpen, setMenuOpen] = useState(false);
   const { connection, refresh } = useHealth();
@@ -48,7 +51,7 @@ function Shell() {
       : 'Backend offline';
   function navigate(next: Page) {
     setPage(next);
-    setProviderMode('mock');
+    setProviderMode(null);
     setMenuOpen(false);
     document.getElementById('main')?.focus();
   }
@@ -96,7 +99,11 @@ function Shell() {
           </Stack>
           <Chip
             icon={<ScienceOutlined />}
-            label={providerMode === 'mock' ? 'MOCK MODE' : 'OPENAI SELECTED'}
+            label={
+              providerMode === 'mock'
+                ? 'SIMULATION MODE'
+                : `${providerLabel(providerMode).toUpperCase()} · LIVE MODE`
+            }
             size="small"
             sx={{
               ml: 'auto',
@@ -142,12 +149,12 @@ function Shell() {
               <Typography variant="h3">
                 {providerMode === 'mock'
                   ? 'Inspectable answers. Controlled actions.'
-                  : 'Hosted model selected'}
+                  : `${providerLabel(providerMode)} · evidence-grounded answers`}
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
                 {providerMode === 'mock'
                   ? 'Mock answers are simulated. No hosted model requests are made.'
-                  : 'Submitted questions and evidence go to OpenAI only with explicit consent.'}
+                  : `Submitted questions and evidence go to ${providerLabel(providerMode)} only with explicit consent. No simulated fallback.`}
               </Typography>
             </Box>
             <Chip label="LOCAL LAB" variant="outlined" size="small" className="milestone-chip" />
@@ -180,7 +187,7 @@ function Shell() {
               className="connection-detail"
             >
               {online
-                ? 'FastAPI · 127.0.0.1:8765 · /health'
+                ? 'FastAPI · authenticated loopback service'
                 : connection.status === 'offline'
                   ? 'Start the local services with npm run dev, then check again.'
                   : 'Contacting your local Python service'}
@@ -194,7 +201,9 @@ function Shell() {
           <Box component="footer">
             <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
               <LockOutlined sx={{ fontSize: 16 }} />
-              <Typography variant="caption">Personal development · synthetic data only</Typography>
+              <Typography variant="caption">
+                Selected test sources · explicit external access
+              </Typography>
             </Stack>
             <Typography variant="caption" className="footer-motto">
               Built for evidence, not assumptions.

@@ -107,6 +107,9 @@ def source_url(value) -> str | None:
 
 
 class NotionWorkspace:
+    # Natural phrasing need not repeat every word in a source document.
+    strict_anchors = False
+
     def __init__(
         self,
         token: str,

@@ -1,5 +1,7 @@
 # Provider interface and OpenAI
 
+Gemini is the live default for installed releases; see [the Gemini adapter](gemini.md). This document describes the optional OpenAI adapter and its recorded verification.
+
 The agent orchestrator depends on an asynchronous `Provider` protocol. The mock provider returns labeled extractive simulation. The OpenAI adapter calls the Responses API with a strict JSON schema, `store: false`, no tools, and an explicit timeout. Question/evidence submission requires a user-selected hosted provider and affirmative transmission consent. There is no automatic fallback to mock responses after hosted errors.
 
 Official OpenAI documentation consulted: [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses), [Responses migration/storage behavior](https://developers.openai.com/api/docs/guides/migrate-to-responses), and [GPT-4.1 mini capabilities](https://developers.openai.com/api/docs/models/gpt-4.1-mini). `gpt-4.1-mini` is a configurable supported baseline, not a claim that it is the newest model. Set `OPENAI_MODEL` or enter a model override; use a pinned model snapshot for stronger reproducibility.

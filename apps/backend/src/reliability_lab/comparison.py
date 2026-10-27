@@ -173,6 +173,14 @@ def compare(left: dict, right: dict) -> dict:
         "Wilson 95% intervals are descriptive for curated, correlated cases; "
         "they do not establish statistical significance or population accuracy."
     )
+    if any(
+        (run["summary"].get("provider_failure_rate") or {}).get("numerator", 0) > 0
+        for run in [left, right]
+    ):
+        warnings.append(
+            "Usage and cost cover accepted responses only. Failed or timed-out calls "
+            "may have unreported usage and charges."
+        )
     if left.get("simulated"):
         warnings.append("Both runs are simulated mock workflows, not hosted-model benchmarks.")
     if (

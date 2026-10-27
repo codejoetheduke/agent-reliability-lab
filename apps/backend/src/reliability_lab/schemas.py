@@ -1,6 +1,8 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+from reliability_lab.config import default_provider
 
 
 class HealthResponse(BaseModel):
@@ -8,7 +10,9 @@ class HealthResponse(BaseModel):
 
     service: Literal["agent-reliability-lab"] = "agent-reliability-lab"
     status: Literal["ok"] = "ok"
-    mode: Literal["mock"] = "mock"
+    mode: Literal["mock", "live"] = Field(
+        default_factory=lambda: "mock" if default_provider() == "mock" else "live"
+    )
     version: Literal["0.1.0"] = "0.1.0"
 
 

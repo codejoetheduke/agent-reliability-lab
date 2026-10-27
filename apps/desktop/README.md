@@ -1,7 +1,5 @@
-# Desktop shell
+# Desktop package
 
-Tauri 2 + React + TypeScript + Vite + Material UI 9 with a Material Design 3 theme. Run commands from the repository root; see the root README for supervised backend/desktop startup. Native release build and launch are verified on Windows.
+Tauri 2, React, strict TypeScript, Vite, Material UI with an explicit Material Design 3 theme, and Recharts.
 
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+See the [root README](../../README.md) for installation and [development guide](../../docs/development.md) for setup and module ownership. Installed builds start a bundled Python sidecar; browser development uses the root supervisor. Live Gemini is the default, with no simulated fallback.

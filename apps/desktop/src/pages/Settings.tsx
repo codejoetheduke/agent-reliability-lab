@@ -46,7 +46,10 @@ export function Settings({ statusText }: { statusText: string }) {
   }
   const rows = [
     ['Local backend', statusText],
-    ['Mock provider', 'Available · simulated answers'],
+    ['Default provider', config?.default_provider ?? 'Loading…'],
+    ['Gemini', config ? (config.gemini_configured ? 'Configured' : 'Not configured') : 'Loading…'],
+    ['Gemini model', config?.gemini_model ?? '—'],
+    ['Mock provider', 'Optional · simulated answers only'],
     ['OpenAI', config ? (config.openai_configured ? 'Configured' : 'Not configured') : 'Loading…'],
     ['Configured model', config?.openai_model ?? '—'],
     [

@@ -39,10 +39,14 @@ def tokens(text: str) -> set[str]:
 
 
 class DataSource(Protocol):
+    strict_anchors: bool
+
     async def records(self) -> list[Record]: ...
 
 
 class SyntheticWorkspace:
+    strict_anchors = True
+
     def __init__(self, records: list[Record] | None = None):
         if records is None:
             path = Path(__file__).parent / "fixtures" / "workspace.json"
@@ -57,7 +61,9 @@ def relevance(question: str, text: str) -> int:
     return len(tokens(question) & tokens(text))
 
 
-def retrieve(question: str, records: list[Record], top_k: int) -> list[Record]:
+def retrieve(
+    question: str, records: list[Record], top_k: int, *, strict_anchors: bool = True
+) -> list[Record]:
     query = tokens(question)
     # Known project names act as scope filters, preventing cross-project evidence mixing.
     projects = {fact.subject.lower().split("/")[0] for record in records for fact in record.facts}
@@ -88,7 +94,7 @@ def retrieve(question: str, records: list[Record], top_k: int) -> list[Record]:
         record_tokens = tokens(record.title + " " + record.body)
         if scope and not scope & record_tokens:
             continue
-        if anchors and not anchors <= record_tokens:
+        if strict_anchors and anchors and not anchors <= record_tokens:
             continue
         score = len(query & record_tokens) + len(query & tokens(record.title))
         if score:

@@ -7,7 +7,7 @@ test('credential-free shell connects to the real local backend and navigates', a
     if (message.type() === 'error') errors.push(message.text());
   });
   await page.goto('/');
-  await expect(page.getByText('MOCK MODE', { exact: true })).toBeVisible();
+  await expect(page.getByText('SIMULATION MODE', { exact: true })).toBeVisible();
   await expect(page.getByText('Backend connected')).toBeVisible();
   const health = await page.request.get('http://127.0.0.1:8765/health');
   expect((await health.json()).mode).toBe('mock');

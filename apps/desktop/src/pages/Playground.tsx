@@ -20,7 +20,7 @@ import { z } from 'zod';
 import { useConfig } from '../hooks/useConfig';
 import { md3 } from '../theme';
 import { ProviderControls } from '../components/ProviderControls';
-import { defaultExecution, type ProviderName } from '../api/execution';
+import { defaultExecution, providerLabel, type ProviderName } from '../api/execution';
 import { ActionWorkbench } from '../components/ActionWorkbench';
 
 type Message = { question: string; result: AgentAnswer };
@@ -32,8 +32,11 @@ const examples = [
 
 export function Playground({ onModeChange }: { onModeChange: (provider: ProviderName) => void }) {
   const [execution, setExecution] = useState(defaultExecution);
-  const [source, setSource] = useState<'synthetic' | 'notion'>('synthetic');
+  const [sourceChoice, setSource] = useState<'synthetic' | 'notion' | null>(null);
   const { config } = useConfig();
+  const source =
+    sourceChoice ??
+    (config?.notion_configured && config.default_provider !== 'mock' ? 'notion' : 'synthetic');
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [sources, setSources] = useState<SourceRecord[]>([]);
@@ -104,7 +107,7 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
         title="Conversation"
         action={
           <Chip
-            label={`${source === 'synthetic' ? 'Synthetic' : 'Notion read-only'} · ${execution.provider === 'mock' ? 'mock provider' : 'OpenAI'}`}
+            label={`${source === 'synthetic' ? 'Synthetic' : 'Notion read-only'} · ${providerLabel(execution.provider)}`}
             size="small"
             variant="outlined"
           />
@@ -155,8 +158,9 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
             <Box sx={{ p: 3 }}>
               <Typography variant="h3">Ask a question. Follow the evidence.</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                Explore a fictional project workspace. Mock answers extract labeled facts; they are
-                not model-generated results.
+                Ask about your selected Notion pages or try the fictional project fixtures. Live
+                answers are selected by the configured model and validated against retrieved
+                evidence.
               </Typography>
               <Stack spacing={1} sx={{ alignItems: 'flex-start' }}>
                 {examples.map((example) => (
@@ -182,7 +186,13 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
                 <Typography variant="subtitle2">Agent</Typography>
                 <Chip
                   size="small"
-                  label={result.simulated ? 'Simulated' : 'Hosted model'}
+                  label={
+                    result.provider === 'policy'
+                      ? 'Local policy · no model call'
+                      : result.simulated
+                        ? 'Simulated'
+                        : `${result.provider} · live`
+                  }
                   variant="outlined"
                 />
                 <Typography variant="caption" color="text.secondary">
@@ -242,14 +252,18 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
             fullWidth
             disabled={busy}
             slotProps={{ htmlInput: { maxLength: 4000 } }}
-            helperText="Enter a question about Atlas, Beacon, or Cedar. Workspace actions require a separate confirmation."
+            helperText={
+              source === 'notion'
+                ? 'Ask about facts in your selected Notion pages. Read-only access never executes workspace changes.'
+                : 'Try Atlas, Beacon, or Cedar. Workspace actions require a separate confirmation.'
+            }
           />
           <Stack direction="row" sx={{ justifyContent: 'flex-end', mt: 2 }}>
             <Button
               type="submit"
               variant="contained"
               disabled={
-                !question.trim() || busy || (execution.provider === 'openai' && !execution.consent)
+                !question.trim() || busy || (execution.provider !== 'mock' && !execution.consent)
               }
               endIcon={busy ? <CircularProgress size={18} color="inherit" /> : <SendRounded />}
             >
@@ -302,7 +316,14 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
         )}
       </Panel>
       <Box sx={{ gridColumn: '1 / -1' }}>
-        <ActionWorkbench />
+        {execution.provider === 'mock' ? (
+          <ActionWorkbench />
+        ) : (
+          <Alert severity="info">
+            Notion access is read only. Live workspace mutations are not enabled; local task
+            simulations are available only when you explicitly select Mock.
+          </Alert>
+        )}
       </Box>
     </Box>
   );

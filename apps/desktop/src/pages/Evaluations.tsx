@@ -24,7 +24,7 @@ export function Evaluations({ onModeChange }: { onModeChange: (provider: Provide
   const [execution, setExecution] = useState(defaultExecution);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [dataset, setDataset] = useState('synthetic-v1');
-  const [label, setLabel] = useState('Mock baseline');
+  const [label, setLabel] = useState('Evaluation run');
   const [topK, setTopK] = useState(4);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -126,7 +126,7 @@ export function Evaluations({ onModeChange }: { onModeChange: (provider: Provide
                   !label.trim() ||
                   topK < 1 ||
                   topK > 10 ||
-                  (execution.provider === 'openai' && !execution.consent)
+                  (execution.provider !== 'mock' && !execution.consent)
                 }
               >
                 {busy ? 'Starting…' : 'Run evaluation'}

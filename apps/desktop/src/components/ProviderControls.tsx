@@ -8,8 +8,9 @@ import {
   Typography,
 } from '@mui/material';
 import { useConfig } from '../hooks/useConfig';
+import { useEffect, useRef } from 'react';
 
-import type { ExecutionConfig, ProviderName } from '../api/execution';
+import { providerLabel, type ExecutionConfig, type ProviderName } from '../api/execution';
 export function ProviderControls({
   value,
   onChange,
@@ -20,6 +21,16 @@ export function ProviderControls({
   onModeChange: (provider: ProviderName) => void;
 }) {
   const { config, error } = useConfig();
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (!config || initialized.current) return;
+    initialized.current = true;
+    onChange({ ...value, provider: config.default_provider, model: '', consent: false });
+    onModeChange(config.default_provider);
+  }, [config, onChange, onModeChange, value]);
+  const label = providerLabel(value.provider);
+  const configured =
+    value.provider === 'gemini' ? config?.gemini_configured : config?.openai_configured;
   return (
     <Stack spacing={2}>
       {error && <Alert severity="error">{error}</Alert>}
@@ -34,21 +45,25 @@ export function ProviderControls({
         }}
       >
         <MenuItem value="mock">Mock · simulated extractive answers</MenuItem>
+        <MenuItem value="gemini">Gemini · live hosted model</MenuItem>
         <MenuItem value="openai">OpenAI · hosted model</MenuItem>
       </TextField>
-      {value.provider === 'openai' && (
+      {value.provider !== 'mock' && (
         <>
-          {!config?.openai_configured && (
+          {!configured && (
             <Alert severity="warning">
-              OpenAI is not configured. Set OPENAI_API_KEY in backend-only configuration and restart
-              the local service.
+              {label} is not configured. Add its API key to private backend settings. Live mode
+              never falls back to simulated answers.
             </Alert>
           )}
           <TextField
             label="Model override (optional)"
             value={value.model}
             onChange={(event) => onChange({ ...value, model: event.target.value })}
-            placeholder={config?.openai_model ?? 'Configured backend model'}
+            placeholder={
+              (value.provider === 'gemini' ? config?.gemini_model : config?.openai_model) ??
+              'Configured backend model'
+            }
             helperText="Use an exact snapshot identifier for reproducible comparisons."
             slotProps={{ htmlInput: { maxLength: 100 } }}
           />
@@ -59,12 +74,19 @@ export function ProviderControls({
                 onChange={(event) => onChange({ ...value, consent: event.target.checked })}
               />
             }
-            label="I allow this question and retrieved test evidence to be sent to OpenAI."
+            label={`I allow this question and retrieved test evidence to be sent to ${label}.`}
           />
           <Typography variant="caption" color="text.secondary">
-            Only submitted questions are sent. Response storage is disabled in the API request.
-            Token usage is reported when available; cost needs configured pricing.
+            Only submitted questions and retrieved excerpts are sent. Request storage is disabled
+            where supported. Token usage is reported when available; cost needs configured pricing.
           </Typography>
+          {value.provider === 'gemini' && (
+            <Alert severity="info">
+              Google may use Gemini free-tier submissions to improve its products. Use fictional or
+              explicitly permitted test content. Free-tier quotas and availability depend on your
+              project.
+            </Alert>
+          )}
         </>
       )}
     </Stack>

@@ -1,9 +1,9 @@
-import { sessionHeaders } from './session';
+import { runtimeSession, sessionHeaders } from './session';
 
 export interface Health {
   service: 'agent-reliability-lab';
   status: 'ok';
-  mode: 'mock';
+  mode: 'mock' | 'live';
   version: '0.1.0';
 }
 
@@ -14,7 +14,8 @@ export async function apiRequest(
   options: RequestInit & { timeoutMs?: number } = {},
 ): Promise<unknown> {
   const { timeoutMs = 30000, ...requestOptions } = options;
-  const response = await fetch(`${API_URL}${path}`, {
+  const { api_url } = await runtimeSession();
+  const response = await fetch(`${api_url}${path}`, {
     ...requestOptions,
     headers: {
       ...(await sessionHeaders()),
@@ -41,8 +42,9 @@ export async function apiRequest(
 }
 
 export async function getHealth(signal?: AbortSignal): Promise<Health> {
+  const { api_url } = await runtimeSession();
   const timeout = AbortSignal.timeout(4000);
-  const response = await fetch(`${API_URL}/health`, {
+  const response = await fetch(`${api_url}/health`, {
     signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
     headers: { Accept: 'application/json' },
   });
@@ -56,7 +58,7 @@ export async function getHealth(signal?: AbortSignal): Promise<Health> {
     !('status' in value) ||
     value.status !== 'ok' ||
     !('mode' in value) ||
-    value.mode !== 'mock' ||
+    !['mock', 'live'].includes(String(value.mode)) ||
     !('version' in value) ||
     value.version !== '0.1.0'
   ) {

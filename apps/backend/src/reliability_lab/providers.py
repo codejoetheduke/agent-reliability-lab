@@ -23,7 +23,9 @@ SYSTEM_INSTRUCTIONS = (
 
 class ProviderError(Exception):
     MESSAGES = {
-        "not_configured": "Configure OPENAI_API_KEY in backend-only environment settings first.",
+        "not_configured": (
+            "Configure the selected provider's API key in backend-only settings first."
+        ),
         "timeout": "The model provider timed out. No answer or action was accepted.",
         "provider_error": (
             "The model provider request failed. "
@@ -34,9 +36,12 @@ class ProviderError(Exception):
         ),
         "refused": "The model provider declined this request.",
         "quota_exhausted": (
-            "OpenAI reported no available API credits. Check the configured project's API billing."
+            "The provider reported exhausted API quota or credits. Check the project's limits."
         ),
-        "rate_limited": "OpenAI rate-limited this request. Wait before explicitly retrying.",
+        "rate_limited": "The provider rate-limited this request. Wait before explicitly retrying.",
+        "invalid_credentials": (
+            "The selected provider rejected its API key. Check private settings."
+        ),
     }
 
     def __init__(self, code: str):
@@ -272,6 +277,16 @@ class OpenAIProvider:
 def get_provider(name: str, model: str | None = None) -> Provider:
     if name == "mock":
         return MockProvider()
+    if name == "gemini":
+        from reliability_lab.config import get_gemini_settings
+        from reliability_lab.gemini import GeminiProvider
+
+        settings = get_gemini_settings()
+        if not settings.key.get_secret_value():
+            raise ProviderError("not_configured")
+        return GeminiProvider(settings, model)
+    if name != "openai":
+        raise ValueError("Unsupported model provider.")
     settings = get_settings()
     if not settings.openai_key.get_secret_value():
         raise ProviderError("not_configured")

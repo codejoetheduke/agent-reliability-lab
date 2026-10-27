@@ -1,0 +1,597 @@
+{
+  "comparable": true,
+  "reasons": [],
+  "warnings": [
+    "Wilson 95% intervals are descriptive for curated, correlated cases; they do not establish statistical significance or population accuracy.",
+    "Usage and cost cover accepted responses only. Failed or timed-out calls may have unreported usage and charges.",
+    "Estimated cost is unavailable in one or both runs."
+  ],
+  "left": {
+    "id": "4e0972e299e44ebd8e7d1f91a7bcdb77",
+    "created_at": "2026-10-27T20:20:11.912122+00:00",
+    "status": "completed",
+    "dataset_id": "synthetic-v1",
+    "dataset_version": "1.2.0",
+    "dataset_hash": "82baf4ac8d373aafb0e2fcfc2067c29d02219c3ec026cc448c5eef7a2f957025",
+    "fixture_hash": "41b7626538fe2f98d63172416cbb57395ab2c56227e7023665a4fe17641aef3d",
+    "metric_version": "extractive-v1",
+    "top_k": 4,
+    "label": "Gemini 3.1 live comparison",
+    "provider": "gemini",
+    "model": "gemini-3.1-flash-lite",
+    "simulated": false,
+    "prompt_version": "gemini-evidence-selection-v2",
+    "conditions_hash": "f088d3b91ed8afb5bc906833824271998897501a6299fc4e911afd35fd9c0423",
+    "execution_settings": {
+      "retrieval": "lexical-v1",
+      "answer_validation": "extractive-grounding-v1",
+      "action_policy": "sqlite-transactional-v1",
+      "source": "synthetic-fixtures",
+      "provider_timeout_seconds": 30.0,
+      "max_output_tokens": 2000,
+      "request_interval_seconds": 7.0
+    },
+    "pricing": null,
+    "total_tests": 29,
+    "summary": {
+      "tests_completed": 29,
+      "tests_passed": 25,
+      "pass_rate": {
+        "numerator": 25,
+        "denominator": 29,
+        "value": 0.8620689655172413
+      },
+      "failure_rate": {
+        "numerator": 7,
+        "denominator": 29,
+        "value": 0.2413793103448276
+      },
+      "provider_failure_rate": {
+        "numerator": 3,
+        "denominator": 20,
+        "value": 0.15
+      },
+      "injected_faults": 4,
+      "metrics": {
+        "action_parameter_correctness": {
+          "numerator": 4,
+          "denominator": 4,
+          "value": 1.0
+        },
+        "action_selection": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "appropriate_abstention": {
+          "numerator": 4,
+          "denominator": 5,
+          "value": 0.8
+        },
+        "citation_correctness": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0
+        },
+        "deadline_correctness": {
+          "numerator": 4,
+          "denominator": 4,
+          "value": 1.0
+        },
+        "duplicate_prevention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "execution_authorization": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "extractive_claim_support": {
+          "numerator": 15,
+          "denominator": 15,
+          "value": 1.0
+        },
+        "labeled_answer_checks": {
+          "numerator": 16,
+          "denominator": 17,
+          "value": 0.9411764705882353
+        },
+        "precision_at_k": {
+          "numerator": 13,
+          "denominator": 68,
+          "value": 0.19117647058823528
+        },
+        "recall_at_k": {
+          "numerator": 13,
+          "denominator": 13,
+          "value": 1.0
+        },
+        "recovery_behavior": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "required_sources_retrieved": {
+          "numerator": 12,
+          "denominator": 12,
+          "value": 1.0
+        }
+      },
+      "failures_by_category": {
+        "clear_answer": 1,
+        "conflicting_information": 1,
+        "unsupported_claim": 1,
+        "ambiguous_reference": 1
+      },
+      "latency_ms": {
+        "median": 2061.491,
+        "p95": 29124.638199999972,
+        "mean": 6049.799137931034,
+        "values": [
+          2061.491,
+          6583.526,
+          35626.89,
+          1579.906,
+          7261.13,
+          20350.063,
+          1658.949,
+          6831.262,
+          8553.429,
+          5767.286,
+          7104.861,
+          6778.491,
+          7194.926,
+          7434.777,
+          34974.355,
+          2035.149,
+          8098.797,
+          1.362,
+          1.214,
+          5434.842,
+          0.532,
+          0.895,
+          0.581,
+          0.573,
+          22.222,
+          14.528,
+          21.637,
+          26.595,
+          23.906
+        ]
+      },
+      "input_tokens": 3624,
+      "output_tokens": 961,
+      "estimated_cost_usd": null
+    },
+    "error": null
+  },
+  "right": {
+    "id": "120a8d2fec0248fba5c611a76acb1368",
+    "created_at": "2026-10-27T20:13:16.716745+00:00",
+    "status": "completed",
+    "dataset_id": "synthetic-v1",
+    "dataset_version": "1.2.0",
+    "dataset_hash": "82baf4ac8d373aafb0e2fcfc2067c29d02219c3ec026cc448c5eef7a2f957025",
+    "fixture_hash": "41b7626538fe2f98d63172416cbb57395ab2c56227e7023665a4fe17641aef3d",
+    "metric_version": "extractive-v1",
+    "top_k": 4,
+    "label": "Gemini live baseline v2",
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "simulated": false,
+    "prompt_version": "gemini-evidence-selection-v2",
+    "conditions_hash": "f088d3b91ed8afb5bc906833824271998897501a6299fc4e911afd35fd9c0423",
+    "execution_settings": {
+      "retrieval": "lexical-v1",
+      "answer_validation": "extractive-grounding-v1",
+      "action_policy": "sqlite-transactional-v1",
+      "source": "synthetic-fixtures",
+      "provider_timeout_seconds": 30.0,
+      "max_output_tokens": 2000,
+      "request_interval_seconds": 7.0
+    },
+    "pricing": {
+      "model": "gemini-3.5-flash-lite",
+      "input_per_million": null,
+      "output_per_million": null
+    },
+    "total_tests": 29,
+    "summary": {
+      "tests_completed": 29,
+      "tests_passed": 29,
+      "pass_rate": {
+        "numerator": 29,
+        "denominator": 29,
+        "value": 1.0
+      },
+      "failure_rate": {
+        "numerator": 4,
+        "denominator": 29,
+        "value": 0.13793103448275862
+      },
+      "provider_failure_rate": {
+        "numerator": 0,
+        "denominator": 20,
+        "value": 0.0
+      },
+      "injected_faults": 4,
+      "metrics": {
+        "action_parameter_correctness": {
+          "numerator": 4,
+          "denominator": 4,
+          "value": 1.0
+        },
+        "action_selection": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "appropriate_abstention": {
+          "numerator": 7,
+          "denominator": 7,
+          "value": 1.0
+        },
+        "citation_correctness": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        },
+        "deadline_correctness": {
+          "numerator": 4,
+          "denominator": 4,
+          "value": 1.0
+        },
+        "duplicate_prevention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "execution_authorization": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "extractive_claim_support": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        },
+        "labeled_answer_checks": {
+          "numerator": 20,
+          "denominator": 20,
+          "value": 1.0
+        },
+        "precision_at_k": {
+          "numerator": 16,
+          "denominator": 80,
+          "value": 0.2
+        },
+        "recall_at_k": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "recovery_behavior": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "required_sources_retrieved": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        }
+      },
+      "failures_by_category": {},
+      "latency_ms": {
+        "median": 4926.938,
+        "p95": 9514.080799999998,
+        "mean": 4240.280344827586,
+        "values": [
+          5769.583,
+          2469.366,
+          6858.525,
+          9225.83,
+          4926.938,
+          9022.921,
+          4891.41,
+          6960.572,
+          7101.261,
+          6876.955,
+          7530.546,
+          8535.662,
+          6550.033,
+          5387.419,
+          6881.752,
+          10969.923,
+          3116.796,
+          1.183,
+          0.997,
+          9706.248,
+          1.231,
+          0.857,
+          0.817,
+          0.968,
+          33.679,
+          24.165,
+          35.233,
+          45.394,
+          41.866
+        ]
+      },
+      "input_tokens": 4327,
+      "output_tokens": 997,
+      "estimated_cost_usd": null
+    },
+    "error": null
+  },
+  "metrics": [
+    {
+      "name": "action_parameter_correctness",
+      "left": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "action_selection",
+      "left": {
+        "numerator": 5,
+        "denominator": 5,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 5,
+        "denominator": 5,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "appropriate_abstention",
+      "left": {
+        "numerator": 4,
+        "denominator": 5,
+        "value": 0.8
+      },
+      "right": {
+        "numerator": 7,
+        "denominator": 7,
+        "value": 1.0
+      },
+      "delta": 0.19999999999999996
+    },
+    {
+      "name": "citation_correctness",
+      "left": {
+        "numerator": 15,
+        "denominator": 15,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "deadline_correctness",
+      "left": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "duplicate_prevention",
+      "left": {
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "execution_authorization",
+      "left": {
+        "numerator": 5,
+        "denominator": 5,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 5,
+        "denominator": 5,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "extractive_claim_support",
+      "left": {
+        "numerator": 15,
+        "denominator": 15,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "labeled_answer_checks",
+      "left": {
+        "numerator": 16,
+        "denominator": 17,
+        "value": 0.9411764705882353
+      },
+      "right": {
+        "numerator": 20,
+        "denominator": 20,
+        "value": 1.0
+      },
+      "delta": 0.05882352941176472
+    },
+    {
+      "name": "precision_at_k",
+      "left": {
+        "numerator": 13,
+        "denominator": 68,
+        "value": 0.19117647058823528
+      },
+      "right": {
+        "numerator": 16,
+        "denominator": 80,
+        "value": 0.2
+      },
+      "delta": 0.00882352941176473
+    },
+    {
+      "name": "recall_at_k",
+      "left": {
+        "numerator": 13,
+        "denominator": 13,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 16,
+        "denominator": 16,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "recovery_behavior",
+      "left": {
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "required_sources_retrieved",
+      "left": {
+        "numerator": 12,
+        "denominator": 12,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "delta": 0.0
+    }
+  ],
+  "left_pass_interval": {
+    "lower": 0.6944100627964798,
+    "upper": 0.9450256003588804
+  },
+  "right_pass_interval": {
+    "lower": 0.8830302015002593,
+    "upper": 1.0
+  },
+  "case_differences": [
+    {
+      "test_id": "atlas-status",
+      "category": "clear_answer",
+      "left_passed": false,
+      "right_passed": true,
+      "left_error": "timeout",
+      "right_error": null
+    },
+    {
+      "test_id": "cedar-conflict",
+      "category": "conflicting_information",
+      "left_passed": false,
+      "right_passed": true,
+      "left_error": "invalid_output",
+      "right_error": null
+    },
+    {
+      "test_id": "unknown-field",
+      "category": "unsupported_claim",
+      "left_passed": false,
+      "right_passed": true,
+      "left_error": "timeout",
+      "right_error": null
+    },
+    {
+      "test_id": "ambiguous-project",
+      "category": "ambiguous_reference",
+      "left_passed": false,
+      "right_passed": true,
+      "left_error": null,
+      "right_error": null
+    }
+  ],
+  "latency_histogram": [
+    {
+      "start_ms": 0.0,
+      "end_ms": 5937.8209378149995,
+      "left_count": 17,
+      "right_count": 17
+    },
+    {
+      "start_ms": 5937.8209378149995,
+      "end_ms": 11875.641875629999,
+      "left_count": 9,
+      "right_count": 12
+    },
+    {
+      "start_ms": 11875.641875629999,
+      "end_ms": 17813.462813445,
+      "left_count": 0,
+      "right_count": 0
+    },
+    {
+      "start_ms": 17813.462813445,
+      "end_ms": 23751.283751259998,
+      "left_count": 1,
+      "right_count": 0
+    },
+    {
+      "start_ms": 23751.283751259998,
+      "end_ms": 29689.104689074997,
+      "left_count": 0,
+      "right_count": 0
+    },
+    {
+      "start_ms": 29689.104689074997,
+      "end_ms": 35626.92562689,
+      "left_count": 2,
+      "right_count": 0
+    }
+  ],
+  "improved": 4,
+  "regressed": 0,
+  "unchanged": 25
+}

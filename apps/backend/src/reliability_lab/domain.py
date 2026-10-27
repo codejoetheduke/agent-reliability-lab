@@ -27,11 +27,20 @@ class QueryRequest(StrictModel):
     question: str = Field(min_length=1, max_length=4000)
     top_k: int = Field(default=4, ge=1, le=10)
     source: Literal["synthetic", "notion"] = "synthetic"
-    provider: Literal["mock", "openai"] = "mock"
+    provider: Literal["mock", "openai", "gemini"] = Field(
+        default_factory=lambda: preferred_provider()
+    )
     model: str | None = Field(
         default=None, min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9._:-]+$"
     )
     allow_external_transmission: bool = False
+
+
+def preferred_provider() -> str:
+    # Local import keeps the common schema module independent of secret configuration.
+    from reliability_lab.config import default_provider
+
+    return default_provider()
 
 
 class Citation(StrictModel):

@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { apiRequest } from '../api/client';
 
 export const configSchema = z.object({
+  default_provider: z.enum(['gemini', 'openai', 'mock']).default('gemini'),
+  gemini_configured: z.boolean().default(false),
+  gemini_model: z.string().default('gemini-3.5-flash-lite'),
   openai_configured: z.boolean(),
   openai_model: z.string(),
   mock_available: z.boolean(),

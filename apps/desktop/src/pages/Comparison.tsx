@@ -180,7 +180,7 @@ export function Comparison() {
                       formatTime(result.right.summary?.latency_ms.p95),
                     ],
                     [
-                      'Input / output tokens',
+                      'Reported input / output tokens',
                       `${result.left.summary?.input_tokens ?? 'Unavailable'} / ${result.left.summary?.output_tokens ?? 'Unavailable'}`,
                       `${result.right.summary?.input_tokens ?? 'Unavailable'} / ${result.right.summary?.output_tokens ?? 'Unavailable'}`,
                     ],

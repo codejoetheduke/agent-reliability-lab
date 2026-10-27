@@ -18,6 +18,8 @@ Zero-denominator metrics are `null`, never silently perfect. Run-level metrics s
 
 Latency is elapsed wall-clock time around the real case execution. Median and p95 linearly interpolate sorted observations at `(n-1)*p`. Mock-provider timings describe the mock workflow, not a hosted model. Token counts remain unavailable unless reported by a real provider. Monetary estimates remain unavailable until both usage and explicitly configured pricing exist.
 
+Summary usage sums accepted responses with reported metadata; a missing count in an accepted response makes that aggregate unavailable. Failed or timed-out calls can have additional unreported usage or charges. These figures are not provider billing totals. Comparisons flag ordinary provider failures, and costs remain estimates for the reported responses. Gemini pacing is part of measured request/case latency and must match between compared runs.
+
 Synthetic fixtures are the only benchmark source. Workspace instructions cannot authorize actions. The core dataset starts with 20 labeled cases; subsequent versions add fault-injection and action scenarios, recording changed content hashes so incompatible runs cannot be compared.
 
 ## Actions and faults

@@ -48,11 +48,14 @@ function nativeEnvironment() {
 }
 
 try {
+  const cargo = process.argv[2] === '--cargo';
   const child = spawn(
-    process.execPath,
-    [path.join(root, 'node_modules/@tauri-apps/cli/tauri.js'), ...process.argv.slice(2)],
+    cargo ? 'cargo' : process.execPath,
+    cargo
+      ? process.argv.slice(3)
+      : [path.join(root, 'node_modules/@tauri-apps/cli/tauri.js'), ...process.argv.slice(2)],
     {
-      cwd: path.join(root, 'apps/desktop'),
+      cwd: path.join(root, cargo ? 'apps/desktop/src-tauri' : 'apps/desktop'),
       env: nativeEnvironment(),
       stdio: 'inherit',
       windowsHide: true,

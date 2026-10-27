@@ -63,7 +63,7 @@ export function Overview({
             : 'Estimated when pricing is configured',
   }));
   const environment = [
-    ['Operating mode', 'Mock / isolated'],
+    ['Operating mode', config?.default_provider === 'mock' ? 'Simulation' : 'Live provider'],
     [
       'Local API',
       connection.status === 'connected'
@@ -74,7 +74,17 @@ export function Overview({
     ],
     [
       'Model provider',
-      config ? (config.openai_configured ? 'OpenAI configured' : 'Mock available') : 'Checking…',
+      config
+        ? config.default_provider === 'gemini'
+          ? config.gemini_configured
+            ? 'Gemini configured'
+            : 'Gemini needs a key'
+          : config.default_provider === 'openai'
+            ? config.openai_configured
+              ? 'OpenAI configured'
+              : 'OpenAI needs a key'
+            : 'Simulation selected'
+        : 'Checking…',
     ],
     [
       'Notion workspace',

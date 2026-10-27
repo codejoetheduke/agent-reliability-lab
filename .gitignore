@@ -16,3 +16,4 @@ playwright-report/
 .local/
 *.log
 *.tsbuildinfo
+apps/desktop/src-tauri/binaries/

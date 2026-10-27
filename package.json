@@ -11,11 +11,17 @@
     "dev:web": "node scripts/dev.mjs web",
     "preview:desktop": "node scripts/dev.mjs production",
     "build": "npm run build --workspace apps/desktop",
-    "build:desktop": "node scripts/native.mjs build --no-bundle",
+    "build:desktop": "npm run package:backend && node scripts/native.mjs build --no-bundle",
     "typecheck": "npm run typecheck --workspace apps/desktop",
     "lint": "npm run lint --workspace apps/desktop",
     "test": "npm run test --workspace apps/desktop",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "package:backend": "node scripts/package-backend.mjs",
+    "package:desktop": "npm run package:backend && node scripts/native.mjs build",
+    "test:backend": "node scripts/python.mjs -m pytest apps/backend/tests -q",
+    "test:sidecar": "node scripts/smoke-sidecar.mjs",
+    "check:source": "node scripts/check-source.mjs",
+    "test:tooling": "node --test tests/tooling/release.test.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",

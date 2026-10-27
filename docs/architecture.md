@@ -2,7 +2,7 @@
 
 ```mermaid
 flowchart LR
-  Launcher[Node supervisor + session nonce] --> Python[Loopback FastAPI]
+  Launcher[Native host / source supervisor] --> Python[Bundled loopback FastAPI]
   Launcher --> Tauri[Tauri / WebView2]
   Tauri --> React[React + MUI MD3 + Recharts]
   React --> Client[Typed Zod API client]
@@ -11,7 +11,7 @@ flowchart LR
   Agent --> Retrieval[Lexical retrieval]
   Retrieval --> Synthetic[Synthetic source]
   Retrieval --> Notion[Scoped read-only Notion adapter]
-  Agent --> Provider[Mock / OpenAI provider]
+  Agent --> Provider[Gemini / OpenAI / explicit mock]
   Python --> Evaluation[Versioned evaluation + comparison]
   Evaluation --> Synthetic
   Evaluation --> SQLite[(Local SQLite history)]
@@ -29,6 +29,6 @@ SQLite connections close explicitly, use WAL, and store JSON run payloads plus t
 
 Notion follows configured roots and validated contained descendants, handles current data sources and pagination, uses bounded retries, and rejects excessive snapshots. Actual page content stays in process memory and transient UI state, excluded from benchmark history/reports/fixtures. Hosted submission is an explicit user operation. See `notion.md`.
 
-The supervisor binds the API to loopback and gives each launch a random nonce. Native React retrieves it through a narrow Tauri command; browser development HTML receives it through the supervised Vite plugin. Public health validates a service fingerprint; protected requests require the nonce. The launcher rejects occupied ports and cleans up owned children. CORS, Host validation, and CSP add browser boundaries; they do not defend against a compromised user account.
+The native host (or source supervisor) binds the API to loopback and gives each launch a random nonce. Native React retrieves it through a narrow Tauri command; browser development HTML receives it through the supervised Vite plugin. Public health validates a service fingerprint; protected requests require the nonce. The launcher rejects occupied ports and cleans up owned children. CORS, Host validation, and CSP add browser boundaries; they do not defend against a compromised user account.
 
-The Windows release embeds frontend assets and uses a separately installed Python environment. Backend packaging, installers, signing, updates, OS credential storage, and public Notion OAuth remain distribution work. macOS/Linux execution and native development HMR remain unverified. Portable structure is not proof of cross-platform compatibility.
+Installed releases embed frontend assets and a native PyInstaller backend. The Rust host selects an ephemeral loopback port, generates a nonce, verifies a protected readiness probe, and owns sidecar shutdown. The Python runtime also exits on closure of its parent input pipe. Signing, notarization, updates, OS credential storage, and public Notion OAuth remain public-distribution work. macOS/Linux execution and native development HMR remain unverified. Portable structure is not proof of cross-platform compatibility.

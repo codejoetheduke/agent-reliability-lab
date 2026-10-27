@@ -13,6 +13,7 @@ function mockFetch(
     if (url.endsWith('/config'))
       return new Response(
         JSON.stringify({
+          default_provider: 'mock',
           openai_configured: false,
           openai_model: 'gpt-4.1-mini',
           mock_available: true,
@@ -45,7 +46,7 @@ afterEach(() => vi.unstubAllGlobals());
 it('shows mock mode and a verified backend connection without credentials', async () => {
   vi.stubGlobal('fetch', mockFetch());
   render(<App />);
-  expect(screen.getByText('MOCK MODE')).toBeVisible();
+  expect(await screen.findByText('SIMULATION MODE')).toBeVisible();
   expect(await screen.findByText('Backend connected')).toBeVisible();
   expect(await screen.findByText('No most recent run')).toBeVisible();
 });
@@ -81,4 +82,31 @@ it('navigates all sections and keeps unavailable operations disabled', async () 
   expect(
     await screen.findByText('Secret values stay in the backend; they are never displayed here.'),
   ).toBeVisible();
+});
+
+it('shows live Gemini mode and requires consent without silently using mock', async () => {
+  const previous = mockFetch();
+  const fetchMock = vi.fn(async (input: string | URL | Request) => {
+    const response = await previous(input);
+    if (String(input).endsWith('/config')) {
+      const config = await response.json();
+      return new Response(
+        JSON.stringify({ ...config, default_provider: 'gemini', gemini_configured: false }),
+      );
+    }
+    return response;
+  });
+  vi.stubGlobal('fetch', fetchMock);
+  render(<App />);
+  expect(await screen.findByText('GEMINI · LIVE MODE')).toBeVisible();
+  await userEvent.click(
+    within(screen.getByRole('navigation')).getByRole('button', { name: 'Agent Playground' }),
+  );
+  expect(await screen.findByText(/Gemini is not configured/)).toBeVisible();
+  await userEvent.type(
+    screen.getByRole('textbox', { name: 'Ask your workspace' }),
+    'Who owns Atlas?',
+  );
+  expect(screen.getByRole('button', { name: 'Send question' })).toBeDisabled();
+  expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith('/agent/query'))).toBe(false);
 });

@@ -139,6 +139,8 @@ def test_action_text_never_reaches_hosted_provider():
         Agent(SyntheticWorkspace(), provider).query(QueryRequest(question="Create an Atlas task"))
     )
     assert answer.reason == "action_requires_confirmation"
+    assert answer.provider == "policy" and not answer.simulated
+    assert answer.input_tokens == answer.output_tokens == 0
 
 
 def test_config_redacts_secrets_and_hosted_queries_require_consent(monkeypatch, caplog):

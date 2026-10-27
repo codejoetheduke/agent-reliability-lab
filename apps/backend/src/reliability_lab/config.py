@@ -10,6 +10,9 @@ from reliability_lab.domain import StrictModel
 
 
 class ConfigStatus(StrictModel):
+    default_provider: str = "gemini"
+    gemini_configured: bool = False
+    gemini_model: str = "gemini-3.5-flash-lite"
     openai_configured: bool
     openai_model: str
     mock_available: bool
@@ -30,6 +33,18 @@ class Settings:
     timeout_seconds: float
     input_price: float | None
     output_price: float | None
+
+
+@dataclass(frozen=True)
+class GeminiSettings:
+    """Backend-only Gemini settings; never serialize this object to an API response."""
+
+    key: SecretStr
+    model: str
+    timeout_seconds: float
+    input_price: float | None
+    output_price: float | None
+    request_interval_seconds: float = 0
 
 
 def private_configuration() -> dict[str, str]:
@@ -81,9 +96,39 @@ def get_settings() -> Settings:
     )
 
 
+def default_provider() -> str:
+    """Live mode is the default. Offline simulations require an explicit choice."""
+    provider = setting("LAB_DEFAULT_PROVIDER", "gemini")
+    if provider not in {"gemini", "openai", "mock"}:
+        raise ValueError("LAB_DEFAULT_PROVIDER must be gemini, openai, or mock.")
+    return provider
+
+
+def get_gemini_settings() -> GeminiSettings:
+    timeout = float(setting("LAB_PROVIDER_TIMEOUT_SECONDS", "30"))
+    if not 0.1 <= timeout <= 120:
+        raise ValueError("Provider timeout must be between 0.1 and 120 seconds.")
+    interval = float(setting("LAB_GEMINI_REQUEST_INTERVAL_SECONDS", "7"))
+    if not 0 <= interval <= 120:
+        raise ValueError("Gemini request interval must be between 0 and 120 seconds.")
+    return GeminiSettings(
+        SecretStr(setting("GEMINI_API_KEY", setting("GOOGLE_API_KEY"))),
+        setting("GEMINI_MODEL", "gemini-3.5-flash-lite"),
+        timeout,
+        optional_price("GEMINI_INPUT_USD_PER_MILLION"),
+        optional_price("GEMINI_OUTPUT_USD_PER_MILLION"),
+        interval,
+    )
+
+
 def public_config() -> dict:
     settings = get_settings()
+    gemini = get_gemini_settings()
+    pricing = gemini if default_provider() == "gemini" else settings
     return {
+        "default_provider": default_provider(),
+        "gemini_configured": bool(gemini.key.get_secret_value()),
+        "gemini_model": gemini.model,
         "openai_configured": bool(settings.openai_key.get_secret_value()),
         "openai_model": settings.model,
         "mock_available": True,
@@ -92,8 +137,7 @@ def public_config() -> dict:
             [item for item in setting("NOTION_ROOT_PAGE_IDS").split(",") if item.strip()]
         ),
         "notion_read_only": True,
-        "pricing_configured": settings.input_price is not None
-        and settings.output_price is not None,
+        "pricing_configured": pricing.input_price is not None and pricing.output_price is not None,
         "provider_timeout_seconds": settings.timeout_seconds,
         "history_storage": "SQLite local history",
         "credentials_in_frontend": False,
