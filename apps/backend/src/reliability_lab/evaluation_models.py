@@ -22,6 +22,8 @@ class Summary(StrictModel):
     tests_passed: int
     pass_rate: Rate
     failure_rate: Rate
+    provider_failure_rate: Rate | None = None
+    injected_faults: int = 0
     metrics: dict[str, Rate]
     failures_by_category: dict[str, int]
     latency_ms: Latencies
@@ -37,6 +39,7 @@ class CaseResult(StrictModel):
     expected: TestCase
     answer: AgentAnswer | None
     error: str | None
+    fault_injected: bool = False
     latency_ms: float
     passed: bool
     checks: dict[str, bool]
@@ -57,6 +60,7 @@ class RunSummary(StrictModel):
     provider: str
     model: str
     simulated: bool
+    prompt_version: str = "legacy-mock-v1"
     total_tests: int
     summary: Summary | None
     error: str | None

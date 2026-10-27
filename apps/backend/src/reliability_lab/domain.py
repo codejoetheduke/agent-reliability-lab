@@ -28,6 +28,10 @@ class QueryRequest(StrictModel):
     top_k: int = Field(default=4, ge=1, le=10)
     source: Literal["synthetic", "notion"] = "synthetic"
     provider: Literal["mock", "openai"] = "mock"
+    model: str | None = Field(
+        default=None, min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9._:-]+$"
+    )
+    allow_external_transmission: bool = False
 
 
 class Citation(StrictModel):
@@ -54,3 +58,5 @@ class AgentAnswer(StrictModel):
     input_tokens: int | None = None
     output_tokens: int | None = None
     estimated_cost_usd: float | None = None
+    model: str = "extractive-mock-v1"
+    provider_latency_ms: float | None = None

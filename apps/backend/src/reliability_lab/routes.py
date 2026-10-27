@@ -35,7 +35,7 @@ async def start_run(request: RunRequest, background: BackgroundTasks, store: Sto
     try:
         run = await prepare_run(request, store)
     except ValueError as exc:
-        raise HTTPException(400, "Unknown dataset.") from exc
+        raise HTTPException(400, str(exc)) from exc
     background.add_task(perform_run, run["id"], store)
     return {key: value for key, value in run.items() if key != "results"}
 

@@ -89,6 +89,17 @@ export function RunDetails({ runId, onClose }: { runId: string | null; onClose: 
               · {formatRate(current.summary?.pass_rate)} labeled checks passed · median{' '}
               {formatTime(current.summary?.latency_ms.median)}
             </Typography>
+            {current.summary && (
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                {current.summary.injected_faults} injected faults · ordinary provider failure rate{' '}
+                {formatRate(current.summary.provider_failure_rate ?? undefined)} · input tokens{' '}
+                {current.summary.input_tokens ?? 'unavailable'} · output tokens{' '}
+                {current.summary.output_tokens ?? 'unavailable'} · estimated cost{' '}
+                {current.summary.estimated_cost_usd == null
+                  ? 'unavailable'
+                  : `$${current.summary.estimated_cost_usd.toFixed(6)}`}
+              </Typography>
+            )}
             {current.error && (
               <Alert severity="error" sx={{ my: 2 }}>
                 {current.error}
@@ -132,6 +143,9 @@ export function RunDetails({ runId, onClose }: { runId: string | null; onClose: 
                       size="small"
                     />
                     <Typography variant="subtitle2">{result.test_id}</Typography>
+                    {result.fault_injected && (
+                      <Chip label="Injected fault" size="small" variant="outlined" />
+                    )}
                     <Typography variant="caption" color="text.secondary">
                       {result.category} · {formatTime(result.latency_ms)}
                     </Typography>

@@ -10,6 +10,21 @@ function mockFetch(
   return vi.fn(async (input: string | URL | Request) => {
     const url = String(input);
     if (url.endsWith('/health')) return healthResponse();
+    if (url.endsWith('/config'))
+      return new Response(
+        JSON.stringify({
+          openai_configured: false,
+          openai_model: 'gpt-4.1-mini',
+          mock_available: true,
+          notion_configured: false,
+          notion_scope_count: 0,
+          notion_read_only: true,
+          pricing_configured: false,
+          provider_timeout_seconds: 30,
+          history_storage: 'SQLite',
+          credentials_in_frontend: false,
+        }),
+      );
     const body = url.endsWith('/overview')
       ? { run_count: 0, latest_run: null, metric_run: null, recent_failures: [] }
       : url.endsWith('/datasets')
@@ -63,5 +78,7 @@ it('navigates all sections and keeps unavailable operations disabled', async () 
     if (name === 'Agent Playground')
       expect(screen.getByRole('button', { name: 'Send question' })).toBeDisabled();
   }
-  expect(screen.getByText('Not loaded or required in this milestone')).toBeVisible();
+  expect(
+    screen.getByText('Secret values stay in the backend; they are never displayed here.'),
+  ).toBeVisible();
 });

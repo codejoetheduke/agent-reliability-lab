@@ -17,8 +17,11 @@ import { datasetSchema, runSchema, type Dataset } from '../api/evaluation';
 import { Panel } from '../components/Panel';
 import { RunDetails } from '../components/RunDetails';
 import { useRuns } from '../hooks/useRuns';
+import { ProviderControls } from '../components/ProviderControls';
+import { defaultExecution, type ProviderName } from '../api/execution';
 
-export function Evaluations() {
+export function Evaluations({ onModeChange }: { onModeChange: (provider: ProviderName) => void }) {
+  const [execution, setExecution] = useState(defaultExecution);
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [dataset, setDataset] = useState('synthetic-v1');
   const [label, setLabel] = useState('Mock baseline');
@@ -45,7 +48,14 @@ export function Evaluations() {
       const run = runSchema.parse(
         await apiRequest('/runs', {
           method: 'POST',
-          body: JSON.stringify({ dataset_id: dataset, label, top_k: topK }),
+          body: JSON.stringify({
+            dataset_id: dataset,
+            label,
+            top_k: topK,
+            provider: execution.provider,
+            model: execution.model || null,
+            allow_external_transmission: execution.consent,
+          }),
         }),
       );
       history.refresh();
@@ -74,10 +84,15 @@ export function Evaluations() {
             </Alert>
           )}
           <Stack spacing={3}>
+            <ProviderControls
+              value={execution}
+              onChange={setExecution}
+              onModeChange={onModeChange}
+            />
             <TextField
               select
               label="Dataset"
-            value={datasets.length ? dataset : ''}
+              value={datasets.length ? dataset : ''}
               onChange={(event) => setDataset(event.target.value)}
             >
               {datasets.map((item) => (
@@ -105,7 +120,14 @@ export function Evaluations() {
                 variant="contained"
                 onClick={() => void start()}
                 startIcon={<PlayArrowRounded />}
-                disabled={busy || !datasets.length || !label.trim() || topK < 1 || topK > 10}
+                disabled={
+                  busy ||
+                  !datasets.length ||
+                  !label.trim() ||
+                  topK < 1 ||
+                  topK > 10 ||
+                  (execution.provider === 'openai' && !execution.consent)
+                }
               >
                 {busy ? 'Starting…' : 'Run evaluation'}
               </Button>

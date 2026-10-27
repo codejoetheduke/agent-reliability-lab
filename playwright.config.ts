@@ -12,7 +12,11 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    env: { LAB_DATA_DIR: path.resolve('.local', `e2e-${process.pid}-${Date.now()}`) },
+    env: {
+      LAB_DATA_DIR: path.resolve('.local', `e2e-${process.pid}-${Date.now()}`),
+      LAB_CREDENTIALS_FILE: '',
+      OPENAI_API_KEY: '',
+    },
     command: 'node scripts/dev.mjs web',
     url: 'http://127.0.0.1:1420',
     reuseExistingServer: false,

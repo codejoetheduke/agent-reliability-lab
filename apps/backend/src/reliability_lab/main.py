@@ -9,7 +9,9 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from reliability_lab.agent import Agent
+from reliability_lab.config import public_config
 from reliability_lab.domain import AgentAnswer, QueryRequest
+from reliability_lab.providers import ProviderError, get_provider
 from reliability_lab.routes import router
 from reliability_lab.schemas import ErrorResponse, HealthResponse
 from reliability_lab.storage import get_store
@@ -26,6 +28,32 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Agent Reliability Lab", version="0.1.0", docs_url="/docs", lifespan=lifespan)
 app.include_router(router)
+
+
+@app.middleware("http")
+async def safe_unexpected_errors(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception:
+        logger.error('{"event":"request_failed","code":"internal_error"}')
+        return error_response(500, "internal_error", "An unexpected local service error occurred.")
+
+
+@app.exception_handler(ProviderError)
+async def provider_error(_request: Request, exc: ProviderError):
+    logger.warning('{"event":"provider_failed","code":"%s"}', exc.code)
+    status = (
+        503
+        if exc.code == "not_configured"
+        else 504
+        if exc.code == "timeout"
+        else 429
+        if exc.code in {"quota_exhausted", "rate_limited"}
+        else 502
+    )
+    return error_response(status, exc.code, str(exc))
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -53,7 +81,10 @@ def error_response(status: int, code: str, message: str) -> JSONResponse:
 
 @app.exception_handler(HTTPException)
 async def http_error(_request: Request, exc: HTTPException) -> JSONResponse:
-    return error_response(exc.status_code, "http_error", "The requested operation is unavailable.")
+    message = (
+        exc.detail if isinstance(exc.detail, str) else "The requested operation is unavailable."
+    )
+    return error_response(exc.status_code, "http_error", message)
 
 
 @app.exception_handler(RequestValidationError)
@@ -75,8 +106,19 @@ async def health() -> HealthResponse:
 
 @app.post("/agent/query", response_model=AgentAnswer)
 async def query_agent(request: QueryRequest) -> AgentAnswer:
-    if request.source != "synthetic" or request.provider != "mock":
+    if request.source != "synthetic":
         from fastapi import HTTPException
 
         raise HTTPException(503, "The requested adapter is not configured.")
-    return await Agent(SyntheticWorkspace()).query(request)
+    if request.provider == "openai" and not request.allow_external_transmission:
+        from fastapi import HTTPException
+
+        raise HTTPException(400, "Explicit external transmission consent is required.")
+    return await Agent(SyntheticWorkspace(), get_provider(request.provider, request.model)).query(
+        request
+    )
+
+
+@app.get("/config")
+async def configuration():
+    return public_config()

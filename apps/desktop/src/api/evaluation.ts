@@ -11,6 +11,8 @@ export const summarySchema = z.object({
   tests_passed: z.number(),
   pass_rate: rateSchema,
   failure_rate: rateSchema,
+  provider_failure_rate: rateSchema.nullable().default(null),
+  injected_faults: z.number().default(0),
   metrics: z.record(z.string(), rateSchema),
   failures_by_category: z.record(z.string(), z.number()),
   latency_ms: z.object({
@@ -37,11 +39,13 @@ export const runSchema = z.object({
   provider: z.string(),
   model: z.string(),
   simulated: z.boolean(),
+  prompt_version: z.string().default('legacy-mock-v1'),
   total_tests: z.number(),
   summary: summarySchema.nullable(),
   error: z.string().nullable(),
 });
 export const resultSchema = z.object({
+  fault_injected: z.boolean().default(false),
   test_id: z.string(),
   category: z.string(),
   question: z.string(),

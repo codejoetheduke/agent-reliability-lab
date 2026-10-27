@@ -12,6 +12,7 @@ from pydantic import Field
 
 from reliability_lab.agent import Agent
 from reliability_lab.domain import AgentAnswer, QueryRequest, StrictModel
+from reliability_lab.providers import FaultProvider, ProviderError, get_provider
 from reliability_lab.workspace import SyntheticWorkspace
 
 METRIC_VERSION = "extractive-v1"
@@ -26,6 +27,8 @@ class TestCase(StrictModel):
     expected_text: list[str] = Field(default_factory=list)
     expected_reason: str = "answered"
     safety_requirements: list[str] = Field(default_factory=lambda: ["no_mutation"])
+    fault: str | None = None
+    expected_error: str | None = None
 
 
 class Dataset(StrictModel):
@@ -129,6 +132,15 @@ def aggregate(results: list[dict]) -> dict:
         "failure_rate": fraction(
             sum(result.get("error") is not None for result in results), len(results)
         ),
+        "provider_failure_rate": fraction(
+            sum(
+                result.get("error") is not None
+                for result in results
+                if not result.get("fault_injected")
+            ),
+            sum(not result.get("fault_injected") for result in results),
+        ),
+        "injected_faults": sum(bool(result.get("fault_injected")) for result in results),
         "metrics": metrics,
         "failures_by_category": dict(failures),
         "latency_ms": {
@@ -149,7 +161,9 @@ def aggregate(results: list[dict]) -> dict:
     }
 
 
-async def execute_case(case: TestCase, top_k: int = 4) -> dict:
+async def execute_case(
+    case: TestCase, top_k: int = 4, provider: str = "mock", model: str | None = None
+) -> dict:
     all_records = await SyntheticWorkspace().records()
     selected = (
         all_records
@@ -157,10 +171,29 @@ async def execute_case(case: TestCase, top_k: int = 4) -> dict:
         else [record for record in all_records if record.id in case.fixture_ids]
     )
     started = perf_counter()
-    answer = await Agent(SyntheticWorkspace(selected)).query(
-        QueryRequest(question=case.question, top_k=top_k)
-    )
+    try:
+        adapter = FaultProvider(case.fault) if case.fault else get_provider(provider, model)
+        answer = await Agent(SyntheticWorkspace(selected), adapter).query(
+            QueryRequest(question=case.question, top_k=top_k)
+        )
+    except ProviderError as exc:
+        return {
+            "test_id": case.id,
+            "category": case.category,
+            "question": case.question,
+            "expected": case.model_dump(),
+            "answer": None,
+            "error": exc.code,
+            "latency_ms": round((perf_counter() - started) * 1000, 3),
+            "passed": exc.code == case.expected_error,
+            "checks": {"expected_safe_error": exc.code == case.expected_error},
+            "metrics": {},
+            "fault_injected": bool(case.fault),
+        }
     outcome = score(case, answer, top_k)
+    if case.expected_error:
+        outcome["passed"] = False
+        outcome["checks"]["expected_safe_error"] = False
     return {
         "test_id": case.id,
         "category": case.category,
@@ -168,6 +201,7 @@ async def execute_case(case: TestCase, top_k: int = 4) -> dict:
         "expected": case.model_dump(),
         "answer": answer.model_dump(),
         "error": None,
+        "fault_injected": bool(case.fault),
         "latency_ms": round((perf_counter() - started) * 1000, 3),
         **outcome,
     }

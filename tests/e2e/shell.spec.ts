@@ -16,7 +16,9 @@ test('credential-free shell connects to the real local backend and navigates', a
   await expect(page.getByRole('heading', { level: 1, name: 'Agent Playground' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Send question' })).toBeDisabled();
   await page.getByRole('navigation').getByRole('button', { name: 'Settings' }).click();
-  await expect(page.getByText('Not loaded or required in this milestone')).toBeVisible();
+  await expect(
+    page.getByText('Secret values stay in the backend; they are never displayed here.'),
+  ).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -85,7 +87,7 @@ test('evaluation results are inspectable, persisted, and deleted only after conf
   await page.getByRole('textbox', { name: 'Run label' }).fill('E2E baseline');
   await page.getByRole('button', { name: 'Run evaluation', exact: true }).click();
   const details = page.getByRole('dialog', { name: 'Experiment details' });
-  await expect(details.getByText(/20\/20 tests/)).toBeVisible();
+  await expect(details.getByText(/24\/24 tests/)).toBeVisible();
   await details.getByText('atlas-owner', { exact: true }).click();
   await expect(details.getByText('Atlas owner is Maya Chen.', { exact: true })).toBeVisible();
   await details.getByRole('button', { name: 'Close experiment details' }).click();

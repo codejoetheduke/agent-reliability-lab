@@ -105,8 +105,8 @@ def test_active_runs_prevent_history_deletion(tmp_path):
     asyncio.run(perform_run(run["id"], store))
     complete = store.run(run["id"])
     assert complete["status"] == "completed"
-    assert complete["summary"]["tests_completed"] == 20
-    assert complete["summary"]["tests_passed"] == 20
+    assert complete["summary"]["tests_completed"] == len(load_dataset().cases)
+    assert complete["summary"]["tests_passed"] == len(load_dataset().cases)
 
 
 def test_run_api_validates_and_exposes_inspectable_results():
@@ -122,7 +122,7 @@ def test_run_api_validates_and_exposes_inspectable_results():
             run_id = response.json()["id"]
             run = (await client.get(f"/runs/{run_id}")).json()
             assert run["status"] == "completed"
-            assert len(run["results"]) == 20
+            assert len(run["results"]) == len(load_dataset().cases)
             assert (await client.get(f"/runs/{run_id}/tests/atlas-owner")).json()["passed"]
             assert (await client.get("/runs")).json()[0]["id"] == run_id
             assert (await client.delete("/history")).json()["deleted"]

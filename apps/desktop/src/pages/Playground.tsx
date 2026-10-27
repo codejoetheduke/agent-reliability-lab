@@ -16,6 +16,8 @@ import { EmptyState, Panel } from '../components/Panel';
 import { apiRequest } from '../api/client';
 import { answerSchema, type AgentAnswer, type SourceRecord } from '../api/contracts';
 import { md3 } from '../theme';
+import { ProviderControls } from '../components/ProviderControls';
+import { defaultExecution, type ProviderName } from '../api/execution';
 
 type Message = { question: string; result: AgentAnswer };
 const examples = [
@@ -24,7 +26,8 @@ const examples = [
   'What is Cedar budget?',
 ];
 
-export function Playground() {
+export function Playground({ onModeChange }: { onModeChange: (provider: ProviderName) => void }) {
+  const [execution, setExecution] = useState(defaultExecution);
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [sources, setSources] = useState<SourceRecord[]>([]);
@@ -44,8 +47,13 @@ export function Playground() {
       const result = answerSchema.parse(
         await apiRequest('/agent/query', {
           method: 'POST',
-          body: JSON.stringify({ question: submitted }),
-          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30000)]),
+          body: JSON.stringify({
+            question: submitted,
+            provider: execution.provider,
+            model: execution.model || null,
+            allow_external_transmission: execution.consent,
+          }),
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(130000)]),
         }),
       );
       if (controller.signal.aborted) return;
@@ -64,8 +72,19 @@ export function Playground() {
     <Box className="playground-grid">
       <Panel
         title="Conversation"
-        action={<Chip label="Synthetic · mock provider" size="small" variant="outlined" />}
+        action={
+          <Chip
+            label={
+              execution.provider === 'mock' ? 'Synthetic · mock provider' : 'Synthetic · OpenAI'
+            }
+            size="small"
+            variant="outlined"
+          />
+        }
       >
+        <Box sx={{ p: 3, pb: 0 }}>
+          <ProviderControls value={execution} onChange={setExecution} onModeChange={onModeChange} />
+        </Box>
         <Box className="conversation-messages" aria-live="polite">
           {messages.length === 0 && (
             <Box sx={{ p: 3 }}>
@@ -164,7 +183,9 @@ export function Playground() {
             <Button
               type="submit"
               variant="contained"
-              disabled={!question.trim() || busy}
+              disabled={
+                !question.trim() || busy || (execution.provider === 'openai' && !execution.consent)
+              }
               endIcon={busy ? <CircularProgress size={18} color="inherit" /> : <SendRounded />}
             >
               {busy ? 'Retrieving evidence…' : 'Send question'}

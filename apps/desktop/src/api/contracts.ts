@@ -40,6 +40,8 @@ export const answerSchema = z.object({
   input_tokens: z.number().nullable(),
   output_tokens: z.number().nullable(),
   estimated_cost_usd: z.number().nullable(),
+  model: z.string().default('extractive-mock-v1'),
+  provider_latency_ms: z.number().nullable().default(null),
 });
 export type AgentAnswer = z.infer<typeof answerSchema>;
 export type SourceRecord = z.infer<typeof recordSchema>;

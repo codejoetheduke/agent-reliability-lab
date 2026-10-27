@@ -23,6 +23,7 @@ import { Overview } from './pages/Overview';
 import { WorkspacePage } from './pages/WorkspacePage';
 import { useHealth } from './hooks/useHealth';
 import { theme, md3 } from './theme';
+import type { ProviderName } from './api/execution';
 import './App.css';
 
 const descriptions: Record<Page, string> = {
@@ -35,6 +36,7 @@ const descriptions: Record<Page, string> = {
 };
 
 function Shell() {
+  const [providerMode, setProviderMode] = useState<ProviderName>('mock');
   const [page, setPage] = useState<Page>('Overview');
   const [menuOpen, setMenuOpen] = useState(false);
   const { connection, refresh } = useHealth();
@@ -46,6 +48,7 @@ function Shell() {
       : 'Backend offline';
   function navigate(next: Page) {
     setPage(next);
+    setProviderMode('mock');
     setMenuOpen(false);
     document.getElementById('main')?.focus();
   }
@@ -93,7 +96,7 @@ function Shell() {
           </Stack>
           <Chip
             icon={<ScienceOutlined />}
-            label="MOCK MODE"
+            label={providerMode === 'mock' ? 'MOCK MODE' : 'OPENAI SELECTED'}
             size="small"
             sx={{
               ml: 'auto',
@@ -136,12 +139,18 @@ function Shell() {
               <ScienceOutlined sx={{ fontSize: 30 }} />
             </Box>
             <Box>
-              <Typography variant="h3">A safe place to start</Typography>
+              <Typography variant="h3">
+                {providerMode === 'mock'
+                  ? 'Inspectable answers. Controlled actions.'
+                  : 'Hosted model selected'}
+              </Typography>
               <Typography variant="body2" sx={{ mt: 0.5 }}>
-                Mock mode is active. No credentials required, no workspace data accessed.
+                {providerMode === 'mock'
+                  ? 'Mock answers are simulated. No hosted model requests are made.'
+                  : 'Submitted questions and evidence go to OpenAI only with explicit consent.'}
               </Typography>
             </Box>
-            <Chip label="Milestone 1" variant="outlined" size="small" className="milestone-chip" />
+            <Chip label="LOCAL LAB" variant="outlined" size="small" className="milestone-chip" />
           </Box>
           <Stack
             direction="row"
@@ -180,7 +189,7 @@ function Shell() {
           {page === 'Overview' ? (
             <Overview connection={connection} onNavigate={navigate} />
           ) : (
-            <WorkspacePage page={page} statusText={statusText} />
+            <WorkspacePage page={page} statusText={statusText} onModeChange={setProviderMode} />
           )}
           <Box component="footer">
             <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
