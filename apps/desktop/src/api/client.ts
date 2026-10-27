@@ -7,6 +7,30 @@ export interface Health {
 
 export const API_URL = 'http://127.0.0.1:8765';
 
+export async function apiRequest(path: string, options: RequestInit = {}): Promise<unknown> {
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      Accept: 'application/json',
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers,
+    },
+    signal: options.signal ?? AbortSignal.timeout(30000),
+  });
+  if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    const message =
+      typeof body === 'object' &&
+      body !== null &&
+      'message' in body &&
+      typeof body.message === 'string'
+        ? body.message
+        : 'The local service could not complete this request.';
+    throw new Error(message);
+  }
+  return response.json();
+}
+
 export async function getHealth(signal?: AbortSignal): Promise<Health> {
   const timeout = AbortSignal.timeout(4000);
   const response = await fetch(`${API_URL}/health`, {

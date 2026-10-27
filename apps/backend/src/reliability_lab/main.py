@@ -7,7 +7,10 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
+from reliability_lab.agent import Agent
+from reliability_lab.domain import AgentAnswer, QueryRequest
 from reliability_lab.schemas import ErrorResponse, HealthResponse
+from reliability_lab.workspace import SyntheticWorkspace
 
 logger = logging.getLogger("reliability_lab")
 app = FastAPI(title="Agent Reliability Lab", version="0.1.0", docs_url="/docs")
@@ -20,8 +23,8 @@ app.add_middleware(
         "http://tauri.localhost",
         "https://tauri.localhost",
     ],
-    allow_methods=["GET"],
-    allow_headers=["Accept"],
+    allow_methods=["GET", "POST", "DELETE"],
+    allow_headers=["Accept", "Content-Type", "X-Lab-Token"],
 )
 app.add_middleware(
     TrustedHostMiddleware,
@@ -56,3 +59,12 @@ async def unexpected_error(_request: Request, _exc: Exception) -> JSONResponse:
 @app.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
     return HealthResponse()
+
+
+@app.post("/agent/query", response_model=AgentAnswer)
+async def query_agent(request: QueryRequest) -> AgentAnswer:
+    if request.source != "synthetic" or request.provider != "mock":
+        from fastapi import HTTPException
+
+        raise HTTPException(503, "The requested adapter is not configured.")
+    return await Agent(SyntheticWorkspace()).query(request)

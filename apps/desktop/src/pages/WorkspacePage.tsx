@@ -1,10 +1,8 @@
-import { Box, Button, Chip, Stack, TextField, Typography } from '@mui/material';
-import ChatBubbleOutlineRounded from '@mui/icons-material/ChatBubbleOutlineRounded';
-import StorageRounded from '@mui/icons-material/StorageRounded';
+import { Playground } from './Playground';
+import { Box, Chip, Typography } from '@mui/material';
 import ScienceOutlined from '@mui/icons-material/ScienceOutlined';
 import CompareArrowsRounded from '@mui/icons-material/CompareArrowsRounded';
 import HistoryRounded from '@mui/icons-material/HistoryRounded';
-import ArrowForwardRounded from '@mui/icons-material/ArrowForwardRounded';
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
 import { EmptyState, Panel } from '../components/Panel';
 import type { Page } from '../components/Navigation';
@@ -16,39 +14,7 @@ export function WorkspacePage({
   page: Exclude<Page, 'Overview'>;
   statusText: string;
 }) {
-  if (page === 'Agent Playground')
-    return (
-      <Box className="playground-grid">
-        <Panel
-          title="Conversation"
-          action={<Chip label="Milestone 2" size="small" variant="outlined" />}
-        >
-          <EmptyState icon={ChatBubbleOutlineRounded} title="A conversation grounded in evidence">
-            The synthetic workspace and agent will be added in Milestone 2.
-          </EmptyState>
-          <Box sx={{ px: 3, pb: 3 }}>
-            <TextField
-              label="Ask your workspace"
-              placeholder="The playground will be available in Milestone 2."
-              multiline
-              minRows={3}
-              fullWidth
-              disabled
-            />
-            <Stack direction="row" sx={{ justifyContent: 'flex-end', mt: 2 }}>
-              <Button variant="contained" disabled endIcon={<ArrowForwardRounded />}>
-                Send question
-              </Button>
-            </Stack>
-          </Box>
-        </Panel>
-        <Panel title="Sources" action={<StorageRounded color="secondary" />}>
-          <EmptyState icon={StorageRounded} title="No sources retrieved">
-            Supporting excerpts and source identifiers will appear here.
-          </EmptyState>
-        </Panel>
-      </Box>
-    );
+  if (page === 'Agent Playground') return <Playground />;
   if (page === 'Evaluations')
     return (
       <Panel

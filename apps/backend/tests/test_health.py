@@ -21,7 +21,10 @@ def test_starts_without_credentials(monkeypatch):
     response = get("/health")
     assert response.status_code == 200
     assert response.json() == {
-        "service": "agent-reliability-lab", "status": "ok", "mode": "mock", "version": "0.1.0"
+        "service": "agent-reliability-lab",
+        "status": "ok",
+        "mode": "mock",
+        "version": "0.1.0",
     }
 
 

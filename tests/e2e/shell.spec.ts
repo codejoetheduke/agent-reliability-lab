@@ -57,3 +57,17 @@ test('compact layout remains usable', async ({ page }) => {
   await page.getByRole('navigation').getByRole('button', { name: 'Run History' }).click();
   await expect(page.getByRole('heading', { name: 'No recorded runs' })).toBeVisible();
 });
+
+test('synthetic playground answers with inspectable sources and abstains on conflicts', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('navigation').getByRole('button', { name: 'Agent Playground' }).click();
+  await page.getByRole('textbox', { name: 'Ask your workspace' }).fill('Who owns Atlas?');
+  await page.getByRole('button', { name: 'Send question' }).click();
+  await expect(page.getByText('Atlas owner is Maya Chen.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Atlas project plan' })).toBeVisible();
+  await page.getByRole('button', { name: 'atlas-plan', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Ask your workspace' }).fill('What is Cedar budget?');
+  await page.getByRole('button', { name: 'Send question' }).click();
+  await expect(page.getByRole('alert')).toContainText('conflicting information');
+  await expect(page.getByRole('heading', { name: 'Cedar budget meeting' })).toBeVisible();
+});
