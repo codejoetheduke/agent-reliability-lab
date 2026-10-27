@@ -1,6 +1,7 @@
 // The only release writer. Runs after every quality/build job has succeeded.
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { verifyReleaseAssets } from './release-assets.mjs';
 
 const repository = process.env.GITHUB_REPOSITORY;
@@ -64,16 +65,21 @@ try {
   for (const name of files) {
     const existing = release.assets?.find((asset) => asset.name === name);
     if (existing) await api(`/releases/assets/${existing.id}`, { method: 'DELETE' });
+    const bytes = readFileSync(path.join(directory, name));
     const response = await fetch(
       `${release.upload_url.split('{')[0]}?name=${encodeURIComponent(name)}`,
       {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/octet-stream' },
-        body: readFileSync(path.join(directory, name)),
+        body: bytes,
       },
     );
     if (!response.ok)
       throw new Error(`Installer upload failed (${response.status}); release remains a draft.`);
+    const uploaded = await response.json();
+    const expectedDigest = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    if (uploaded.name !== name || uploaded.digest !== expectedDigest)
+      throw new Error('Uploaded asset name or digest changed; release remains a draft.');
   }
   await api(`/releases/${release.id}`, { method: 'PATCH', body: JSON.stringify({ draft: false }) });
   console.log(`Published private preview release: ${release.html_url}`);

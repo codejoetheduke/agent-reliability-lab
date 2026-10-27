@@ -4,7 +4,7 @@ export interface Health {
   service: 'agent-reliability-lab';
   status: 'ok';
   mode: 'mock' | 'live';
-  version: '0.1.0';
+  version: '0.1.1';
 }
 
 export const API_URL = 'http://127.0.0.1:8765';
@@ -60,7 +60,7 @@ export async function getHealth(signal?: AbortSignal): Promise<Health> {
     !('mode' in value) ||
     !['mock', 'live'].includes(String(value.mode)) ||
     !('version' in value) ||
-    value.version !== '0.1.0'
+    value.version !== '0.1.1'
   ) {
     throw new Error('The local backend returned an incompatible health response.');
   }

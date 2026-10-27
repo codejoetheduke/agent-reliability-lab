@@ -123,7 +123,7 @@ export function Navigation({
           <Typography variant="caption" color="text.secondary">
             Desktop workspace
           </Typography>
-          <Chip label="v0.1.0" size="small" variant="outlined" />
+          <Chip label="v0.1.1" size="small" variant="outlined" />
         </Stack>
       </Box>
     </Box>

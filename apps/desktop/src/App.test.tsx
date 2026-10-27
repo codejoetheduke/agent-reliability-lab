@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, expect, it, vi } from 'vitest';
 import App from './App';
 
-const health = { service: 'agent-reliability-lab', status: 'ok', mode: 'mock', version: '0.1.0' };
+const health = { service: 'agent-reliability-lab', status: 'ok', mode: 'mock', version: '0.1.1' };
 function mockFetch(
   healthResponse = vi.fn().mockImplementation(async () => new Response(JSON.stringify(health))),
 ) {

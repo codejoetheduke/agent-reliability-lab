@@ -14,7 +14,7 @@ import uvicorn
 
 def main():
     if "--version" in sys.argv:
-        print("agent-reliability-backend 0.1.0")
+        print("agent-reliability-backend 0.1.1")
         return
     if len(os.environ.get("LAB_SESSION_TOKEN", "")) < 32:
         raise SystemExit("A native session token is required to start the bundled backend.")

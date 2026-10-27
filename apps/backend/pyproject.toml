@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-reliability-backend"
-version = "0.1.0"
+version = "0.1.1"
 description = "Local API for Agent Reliability Lab"
 requires-python = ">=3.11"
 dependencies = ["fastapi>=0.115,<1", "pydantic>=2.10,<3", "uvicorn>=0.34,<1", "httpx>=0.28,<1"]

@@ -26,7 +26,7 @@ def test_starts_without_credentials(monkeypatch):
         "service": "agent-reliability-lab",
         "status": "ok",
         "mode": "mock",
-        "version": "0.1.0",
+        "version": "0.1.1",
     }
 
 

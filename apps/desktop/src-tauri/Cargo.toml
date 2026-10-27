@@ -1,6 +1,6 @@
 [package]
 name = "agent-reliability-lab"
-version = "0.1.0"
+version = "0.1.1"
 description = "Local experiments for trustworthy agents"
 authors = ["codejoetheduke"]
 edition = "2024"

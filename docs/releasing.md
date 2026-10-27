@@ -24,8 +24,8 @@ Python must be frozen natively on each architecture; Rust cross-compilation alon
 Update root/frontend package versions, Cargo version, backend version, API version contracts, and release notes consistently. Commit the release candidate and verify the main CI run. Create a matching version tag, for example:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 The publisher rejects a tag that does not match package.json. It verifies all four target checksum manifests exist. The release is marked prerelease for this private preview. Use the GitHub Actions run and release assets as the actual build evidence; generating YAML alone is not proof that another OS works.

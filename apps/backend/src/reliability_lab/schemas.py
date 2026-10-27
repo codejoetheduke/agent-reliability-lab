@@ -13,7 +13,7 @@ class HealthResponse(BaseModel):
     mode: Literal["mock", "live"] = Field(
         default_factory=lambda: "mock" if default_provider() == "mock" else "live"
     )
-    version: Literal["0.1.0"] = "0.1.0"
+    version: Literal["0.1.1"] = "0.1.1"
 
 
 class ErrorResponse(BaseModel):

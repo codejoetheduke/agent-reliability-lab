@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 export const releaseTargets = [
@@ -9,10 +9,34 @@ export const releaseTargets = [
   'x86_64-apple-darwin',
 ];
 
+/** Use stable ASCII asset names before hashing; GitHub rewrites spaces on upload. */
+export function releaseAssetName(name) {
+  if (path.basename(name) !== name) throw new Error('Expected an installer basename.');
+  return name.replace(/[^A-Za-z0-9._-]/g, '.');
+}
+
+export function collectReleaseAssets(files, output, target) {
+  if (!releaseTargets.includes(target)) throw new Error('Unknown release target.');
+  if (!files.length) throw new Error('No installer assets were produced.');
+  mkdirSync(output, { recursive: true });
+  const names = new Set();
+  const sums = [];
+  for (const file of files) {
+    const name = releaseAssetName(path.basename(file));
+    if (names.has(name)) throw new Error(`Installer filename collision: ${name}`);
+    names.add(name);
+    copyFileSync(file, path.join(output, name));
+    sums.push(`${createHash('sha256').update(readFileSync(file)).digest('hex')}  ${name}`);
+  }
+  writeFileSync(path.join(output, `SHA256SUMS-${target}.txt`), sums.join('\n') + '\n');
+}
+
 /** Refuse partial or altered installers before creating/updating a release. */
 export function verifyReleaseAssets(directory) {
   const names = readdirSync(directory);
   const installers = names.filter((name) => /\.(exe|msi|dmg|deb|rpm|AppImage)$/.test(name));
+  if (installers.some((name) => releaseAssetName(name) !== name))
+    throw new Error('Installer names must be normalized before checksum generation.');
   const verified = new Map();
   for (const target of releaseTargets) {
     const checksumName = `SHA256SUMS-${target}.txt`;

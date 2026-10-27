@@ -8,7 +8,7 @@ Verified locally on Windows, 2026-10-27. The private repository's actual cross-p
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | Backend pytest                                  | 94 passed                                                                                                                 |
 | Frontend Vitest                                 | 6 passed                                                                                                                  |
-| Installer-manifest guard tests                  | 4 passed                                                                                                                  |
+| Installer-manifest guard tests                  | 7 passed                                                                                                                  |
 | Playwright / real local services                | 7 passed                                                                                                                  |
 | Strict TypeScript and ESLint                    | Passed                                                                                                                    |
 | Ruff lint and formatting                        | Passed                                                                                                                    |
@@ -40,6 +40,8 @@ The compatible v2 comparison records four improved outcomes for 3.5, zero regres
 Each suite contains 18 hosted question attempts, two local no-model action refusals, four deliberate provider-fault injections, and five isolated action controls. A 29/29 result does not mean 29 successful LLM requests. Missing or incomplete usage is not invented; summaries cover reported accepted responses, and failed calls can have unreported usage/charges. No zero price is assumed from potential free-tier eligibility.
 
 ## CI and release evidence
+
+The first tagged build passed all platform gates, but post-upload verification caught GitHub's filename normalization. That preview was returned to draft. The 0.1.1 publisher requires normalized installer names and verifies the server's returned asset name and digest before publishing; three additional regression tests cover normalization, rejection of unsafe names, and filename collisions.
 
 [The initial four-platform build](https://github.com/codejoetheduke/agent-reliability-lab/actions/runs/40582161989) passed all three source-quality jobs and all four native installer jobs. The release workflow repeats these gates for the tagged revision before publishing its assets.
 

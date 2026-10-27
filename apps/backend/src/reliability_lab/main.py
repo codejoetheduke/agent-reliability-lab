@@ -33,7 +33,7 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(title="Agent Reliability Lab", version="0.1.0", docs_url="/docs", lifespan=lifespan)
+app = FastAPI(title="Agent Reliability Lab", version="0.1.1", docs_url="/docs", lifespan=lifespan)
 app.include_router(router)
 app.include_router(action_router)
 

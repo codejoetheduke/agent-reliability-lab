@@ -1,4 +1,6 @@
-# Agent Reliability Lab 0.1.0 — private preview
+# Agent Reliability Lab 0.1.1 — private preview
+
+This patch normalizes installer filenames before generating checksums and verifies GitHub's returned filename and SHA-256 digest for every upload before publication. It supersedes the withdrawn 0.1.0 preview, whose binary hashes were valid but whose filename metadata did not match GitHub's normalized download names.
 
 Live Gemini is the default. The app reads selected Notion test pages, validates evidence excerpts and citations, records synthetic evaluations, and compares compatible model runs.
 
