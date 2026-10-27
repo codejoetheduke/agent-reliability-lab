@@ -64,7 +64,9 @@ def test_retrieval_never_mixes_explicit_projects():
 def test_endpoint_and_request_validation():
     async def check():
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+            headers={"X-Lab-Token": "unit-test-session"},
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://testserver",
         ) as client:
             assert (
                 await client.post("/agent/query", json={"question": "Who owns Atlas?"})

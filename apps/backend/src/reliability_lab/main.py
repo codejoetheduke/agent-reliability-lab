@@ -1,4 +1,6 @@
+import hmac
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -8,6 +10,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
+from reliability_lab.action_routes import router as action_router
+from reliability_lab.actions import ActionError
 from reliability_lab.agent import Agent
 from reliability_lab.config import ConfigStatus, public_config
 from reliability_lab.domain import AgentAnswer, QueryRequest
@@ -28,11 +32,32 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="Agent Reliability Lab", version="0.1.0", docs_url="/docs", lifespan=lifespan)
 app.include_router(router)
+app.include_router(action_router)
+
+
+@app.exception_handler(ActionError)
+async def action_error(_request: Request, exc: ActionError):
+    return error_response(exc.status, "action_error", str(exc))
 
 
 @app.middleware("http")
 async def safe_unexpected_errors(request: Request, call_next):
     try:
+        if request.method != "OPTIONS" and request.url.path not in {
+            "/health",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+            "/docs/oauth2-redirect",
+        }:
+            expected = os.environ.get("LAB_SESSION_TOKEN", "")
+            supplied = request.headers.get("X-Lab-Token", "")
+            if not expected or not hmac.compare_digest(expected, supplied):
+                return error_response(
+                    401,
+                    "session_required",
+                    "Local session authorization failed. Restart using the supervised launcher.",
+                )
         return await call_next(request)
     except Exception:
         logger.error('{"event":"request_failed","code":"internal_error"}')

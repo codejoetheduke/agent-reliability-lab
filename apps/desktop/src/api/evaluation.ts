@@ -45,6 +45,7 @@ export const runSchema = z.object({
   error: z.string().nullable(),
 });
 export const resultSchema = z.object({
+  action_outcome: z.record(z.string(), z.unknown()).nullable().default(null),
   fault_injected: z.boolean().default(false),
   test_id: z.string(),
   category: z.string(),

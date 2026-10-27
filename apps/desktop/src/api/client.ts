@@ -1,3 +1,5 @@
+import { sessionHeaders } from './session';
+
 export interface Health {
   service: 'agent-reliability-lab';
   status: 'ok';
@@ -7,15 +9,22 @@ export interface Health {
 
 export const API_URL = 'http://127.0.0.1:8765';
 
-export async function apiRequest(path: string, options: RequestInit = {}): Promise<unknown> {
+export async function apiRequest(
+  path: string,
+  options: RequestInit & { timeoutMs?: number } = {},
+): Promise<unknown> {
+  const { timeoutMs = 30000, ...requestOptions } = options;
   const response = await fetch(`${API_URL}${path}`, {
-    ...options,
+    ...requestOptions,
     headers: {
+      ...(await sessionHeaders()),
       Accept: 'application/json',
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
       ...options.headers,
     },
-    signal: options.signal ?? AbortSignal.timeout(30000),
+    signal: options.signal
+      ? AbortSignal.any([options.signal, AbortSignal.timeout(timeoutMs)])
+      : AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null);

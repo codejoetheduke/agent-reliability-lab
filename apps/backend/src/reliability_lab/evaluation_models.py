@@ -40,6 +40,7 @@ class CaseResult(StrictModel):
     answer: AgentAnswer | None
     error: str | None
     fault_injected: bool = False
+    action_outcome: dict | None = None
     latency_ms: float
     passed: bool
     checks: dict[str, bool]

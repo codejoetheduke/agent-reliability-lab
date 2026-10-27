@@ -153,6 +153,11 @@ export function RunDetails({ runId, onClose }: { runId: string | null; onClose: 
                 </AccordionSummary>
                 <AccordionDetails>
                   <Typography sx={{ mb: 2 }}>{result.question}</Typography>
+                  {result.action_outcome && (
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      Isolated mock action lifecycle. No model request or external mutation.
+                    </Alert>
+                  )}
                   {result.error && <Alert severity="error">{result.error}</Alert>}
                   <Typography sx={{ whiteSpace: 'pre-line', mb: 2 }}>
                     {result.answer?.answer}

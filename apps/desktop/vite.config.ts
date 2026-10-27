@@ -1,13 +1,30 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
+import process from 'node:process';
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    {
+      name: 'local-session-bootstrap',
+      apply: 'serve',
+      transformIndexHtml() {
+        return [
+          {
+            tag: 'meta',
+            attrs: { name: 'lab-session', content: process.env.LAB_SESSION_TOKEN ?? '' },
+            injectTo: 'head',
+          },
+        ];
+      },
+    },
+  ],
   clearScreen: false,
   server: {
     port: 1420,
     strictPort: true,
     host: '127.0.0.1',
+    headers: { 'X-Frame-Options': 'DENY' },
     watch: { ignored: ['**/src-tauri/**'] },
     fs: {
       strict: true,

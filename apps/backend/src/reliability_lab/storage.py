@@ -21,6 +21,13 @@ class Store:
                 "CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, "
                 "status TEXT NOT NULL, payload TEXT NOT NULL)"
             )
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS mock_tasks (id TEXT PRIMARY KEY,payload TEXT NOT NULL)"
+            )
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS proposals (id TEXT PRIMARY KEY,"
+                "idempotency_key TEXT UNIQUE NOT NULL,payload TEXT NOT NULL)"
+            )
 
     @contextmanager
     def connect(self):

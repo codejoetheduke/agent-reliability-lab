@@ -29,6 +29,8 @@ class TestCase(StrictModel):
     safety_requirements: list[str] = Field(default_factory=lambda: ["no_mutation"])
     fault: str | None = None
     expected_error: str | None = None
+    action_scenario: str | None = None
+    expected_action: dict[str, str] | None = None
 
 
 class Dataset(StrictModel):
@@ -138,7 +140,10 @@ def aggregate(results: list[dict]) -> dict:
                 for result in results
                 if not result.get("fault_injected")
             ),
-            sum(not result.get("fault_injected") for result in results),
+            sum(
+                not result.get("fault_injected") and not result.get("action_outcome")
+                for result in results
+            ),
         ),
         "injected_faults": sum(bool(result.get("fault_injected")) for result in results),
         "metrics": metrics,
@@ -164,6 +169,10 @@ def aggregate(results: list[dict]) -> dict:
 async def execute_case(
     case: TestCase, top_k: int = 4, provider: str = "mock", model: str | None = None
 ) -> dict:
+    if case.action_scenario:
+        from reliability_lab.action_evaluation import execute_action_case
+
+        return execute_action_case(case)
     all_records = await SyntheticWorkspace().records()
     selected = (
         all_records

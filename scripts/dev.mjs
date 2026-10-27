@@ -3,10 +3,13 @@ import { existsSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const windows = process.platform === 'win32';
 const mode = process.argv[2] ?? 'desktop';
+// Only the local session nonce reaches the UI. Provider credentials stay in Python.
+process.env.LAB_SESSION_TOKEN = randomBytes(32).toString('hex');
 const children = [];
 let stopping = false;
 

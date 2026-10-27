@@ -8,7 +8,9 @@ from reliability_lab.main import app
 def get(path, headers=None):
     async def request():
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+            headers={"X-Lab-Token": "unit-test-session"},
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://testserver",
         ) as client:
             return await client.get(path, headers=headers)
 

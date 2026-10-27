@@ -112,7 +112,9 @@ def test_active_runs_prevent_history_deletion(tmp_path):
 def test_run_api_validates_and_exposes_inspectable_results():
     async def check():
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+            headers={"X-Lab-Token": "unit-test-session"},
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://testserver",
         ) as client:
             assert len((await client.get("/datasets")).json()) == 1
             assert (await client.post("/runs", json={"dataset_id": "missing"})).status_code == 400

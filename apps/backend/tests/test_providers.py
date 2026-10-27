@@ -135,7 +135,9 @@ def test_config_redacts_secrets_and_hosted_queries_require_consent(monkeypatch, 
 
     async def check():
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+            headers={"X-Lab-Token": "unit-test-session"},
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://testserver",
         ) as client:
             response = await client.get("/config")
             assert response.json()["openai_configured"]
@@ -157,7 +159,9 @@ def test_unexpected_exceptions_do_not_leak_into_responses_or_logs(monkeypatch, c
 
     async def check():
         async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=app), base_url="http://testserver"
+            headers={"X-Lab-Token": "unit-test-session"},
+            transport=httpx.ASGITransport(app=app),
+            base_url="http://testserver",
         ) as client:
             response = await client.post("/agent/query", json={"question": "Who owns Atlas?"})
             assert response.status_code == 500

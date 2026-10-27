@@ -6,6 +6,8 @@ Official OpenAI documentation consulted: [Structured Outputs](https://developers
 
 Backend-only environment variables:
 
+Private user configuration is also supported at `~/.agent-reliability-lab/credentials.json`, or an explicit `LAB_CREDENTIALS_FILE` path, using environment-variable names as JSON keys and string values. It lives outside the source tree. Environment settings override the file; setting `LAB_CREDENTIALS_FILE` to an empty string disables file loading for tests. The supplied OpenAI key was saved there with restrictive Windows file permissions, never in this repository.
+
 - `OPENAI_API_KEY`: hosted provider credential; never sent to React, stored in SQLite, or logged.
 - `OPENAI_MODEL`: default model identifier.
 - `LAB_PROVIDER_TIMEOUT_SECONDS`: 0.1–120 seconds, default 30.

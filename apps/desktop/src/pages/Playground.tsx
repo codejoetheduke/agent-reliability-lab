@@ -18,6 +18,7 @@ import { answerSchema, type AgentAnswer, type SourceRecord } from '../api/contra
 import { md3 } from '../theme';
 import { ProviderControls } from '../components/ProviderControls';
 import { defaultExecution, type ProviderName } from '../api/execution';
+import { ActionWorkbench } from '../components/ActionWorkbench';
 
 type Message = { question: string; result: AgentAnswer };
 const examples = [
@@ -53,7 +54,8 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
             model: execution.model || null,
             allow_external_transmission: execution.consent,
           }),
-          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(130000)]),
+          signal: controller.signal,
+          timeoutMs: 130000,
         }),
       );
       if (controller.signal.aborted) return;
@@ -236,6 +238,9 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
           </Stack>
         )}
       </Panel>
+      <Box sx={{ gridColumn: '1 / -1' }}>
+        <ActionWorkbench />
+      </Box>
     </Box>
   );
 }
