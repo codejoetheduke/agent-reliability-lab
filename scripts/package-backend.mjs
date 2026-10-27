@@ -14,6 +14,22 @@ if (target.status !== 0 || !/^[a-zA-Z0-9_-]+$/.test(target.stdout.trim()))
   throw new Error('Rust host target is unavailable.');
 const triple = target.stdout.trim();
 const build = path.join(root, '.local', 'sidecar-build');
+// Some managed Python distributions add a CA distrust file to stdlib ssl.py.
+// Preserve that runtime policy in the frozen executable rather than bypassing it.
+const policy = spawnSync(
+  python,
+  [
+    '-c',
+    'import pathlib,ssl; p=pathlib.Path(ssl.__file__).with_name("codex-rejected-cas.pem"); print(p if p.is_file() else "")',
+  ],
+  {
+    encoding: 'utf8',
+    env: { ...process.env, PYTHONUTF8: '1' },
+  },
+);
+if (policy.status !== 0) throw new Error('Unable to inspect Python runtime data.');
+const policyFile = policy.stdout.trim();
+const runtimeData = policyFile ? ['--add-data', `${policyFile}${path.delimiter}.`] : [];
 const result = spawnSync(
   python,
   [
@@ -26,6 +42,7 @@ const result = spawnSync(
     'reliability-backend',
     '--collect-data',
     'reliability_lab',
+    ...runtimeData,
     '--distpath',
     path.join(build, 'dist'),
     '--workpath',
@@ -34,7 +51,7 @@ const result = spawnSync(
     build,
     path.join(root, 'scripts/backend-entry.py'),
   ],
-  { cwd: root, stdio: 'inherit' },
+  { cwd: root, stdio: 'inherit', env: { ...process.env, PYTHONUTF8: '1' } },
 );
 if (result.status !== 0) process.exit(result.status ?? 1);
 const directory = path.join(root, 'apps/desktop/src-tauri/binaries');

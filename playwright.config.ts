@@ -4,6 +4,8 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: false,
   workers: 1,
+  reporter: 'list',
+  globalTimeout: process.env.CI ? 300000 : undefined,
   use: {
     baseURL: 'http://127.0.0.1:1420',
     browserName: 'chromium',
@@ -25,6 +27,8 @@ export default defineConfig({
     command: 'node scripts/dev.mjs web',
     url: 'http://127.0.0.1:1420',
     reuseExistingServer: false,
+    gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
+    stdout: 'pipe',
     timeout: 30000,
   },
 });

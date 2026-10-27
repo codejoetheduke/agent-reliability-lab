@@ -76,3 +76,5 @@ General benchmarks use packaged fictional JSON fixtures. New runs save input sna
 Use npm's lockfile, Cargo.lock, and the Python development/build locks. Update related pins together and run quality, packaging, and frozen smoke checks. GitHub Actions references use immutable commits with release-version comments. Dependabot proposes dependency updates; passing CI is required before release.
 
 PyInstaller includes only the backend package, its dependencies, and packaged fixture data. Credentials, local history, downloaded tools, frozen binaries, and signing material remain ignored. Run the source guard and a private-value scan before the first push.
+
+The packager also preserves an additional CA distrust-data file when the build interpreter's SSL module requires one. This is conditional runtime data, not a provider credential, and certificate verification remains enabled. The frozen smoke test initializes HTTPS through an unused local proxy with a dummy key, so it catches missing TLS resources without sending a request or credential to Google. Playwright sends SIGTERM before forced cleanup on POSIX so the source supervisor can stop its detached children.

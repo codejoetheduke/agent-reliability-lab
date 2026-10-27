@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -23,24 +23,35 @@ await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
 const port = server.address().port;
 await new Promise((resolve) => server.close(resolve));
 const token = randomBytes(32).toString('hex');
+const credentials = path.join(directory, 'private-test-settings.json');
+writeFileSync(credentials, '{}');
+const proxy = createServer();
+await new Promise((resolve) => proxy.listen(0, '127.0.0.1', resolve));
+const proxyPort = proxy.address().port;
+await new Promise((resolve) => proxy.close(resolve));
+const environment = {
+  ...process.env,
+  LAB_DATA_DIR: directory,
+  LAB_PORT: String(port),
+  LAB_PARENT_MANAGED: '1',
+  LAB_SESSION_TOKEN: token,
+  LAB_CREDENTIALS_FILE: credentials,
+  LAB_DEFAULT_PROVIDER: 'gemini',
+  OPENAI_API_KEY: '',
+  NOTION_API_KEY: '',
+  NOTION_ROOT_PAGE_IDS: '',
+  HTTPS_PROXY: `http://127.0.0.1:${proxyPort}`,
+  HTTP_PROXY: `http://127.0.0.1:${proxyPort}`,
+  NO_PROXY: '127.0.0.1,localhost',
+  no_proxy: '127.0.0.1,localhost',
+};
+delete environment.GEMINI_API_KEY;
+delete environment.GOOGLE_API_KEY;
 const child = spawn(binary, [], {
   cwd: directory,
   windowsHide: true,
   stdio: ['pipe', 'pipe', 'pipe'],
-  env: {
-    ...process.env,
-    LAB_DATA_DIR: directory,
-    LAB_PORT: String(port),
-    LAB_PARENT_MANAGED: '1',
-    LAB_SESSION_TOKEN: token,
-    LAB_CREDENTIALS_FILE: '',
-    LAB_DEFAULT_PROVIDER: 'gemini',
-    GEMINI_API_KEY: '',
-    GOOGLE_API_KEY: '',
-    OPENAI_API_KEY: '',
-    NOTION_API_KEY: '',
-    NOTION_ROOT_PAGE_IDS: '',
-  },
+  env: environment,
 });
 let diagnostics = '';
 child.stderr.on('data', (chunk) => {
@@ -83,6 +94,20 @@ try {
     ).status,
     503,
   );
+  // Initialize the actual HTTPS stack without sending a request to Google.
+  // A refused connection to an unused local proxy must be a safe provider error.
+  writeFileSync(credentials, JSON.stringify({ GEMINI_API_KEY: 'unit-test-not-a-real-key' }));
+  const unavailable = await request('/agent/query', {
+    method: 'POST',
+    body: JSON.stringify({
+      question: 'Who owns Atlas?',
+      provider: 'gemini',
+      allow_external_transmission: true,
+    }),
+  });
+  assert.equal(unavailable.status, 502, `HTTPS initialization failed: ${diagnostics}`);
+  assert.equal((await unavailable.json()).code, 'provider_error');
+  writeFileSync(credentials, '{}');
   const answer = await (
     await request('/agent/query', {
       method: 'POST',

@@ -61,6 +61,7 @@ async function requireFreePort(port) {
 
 process.on('SIGINT', () => stop());
 process.on('SIGTERM', () => stop());
+process.on('SIGHUP', () => stop());
 process.on('exit', () => {
   if (!stopping) stop(1);
 });

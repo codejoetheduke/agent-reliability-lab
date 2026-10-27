@@ -1,7 +1,9 @@
 import hmac
 import logging
 import os
+import traceback
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -60,8 +62,20 @@ async def safe_unexpected_errors(request: Request, call_next):
                     "Local session authorization failed. Restart using the supervised launcher.",
                 )
         return await call_next(request)
-    except Exception:
-        logger.error('{"event":"request_failed","code":"internal_error"}')
+    except Exception as exc:
+        frame = traceback.extract_tb(exc.__traceback__)[-1]
+        logger.error(
+            '{"event":"request_failed","code":"internal_error",'
+            '"exception_type":"%s","location":"%s:%s:%s","ca_file_missing":%s}',
+            type(exc).__name__,
+            Path(frame.filename).name,
+            frame.lineno,
+            frame.name,
+            "true"
+            if isinstance(exc, FileNotFoundError)
+            and str(exc.filename or "").endswith((".pem", ".crt"))
+            else "false",
+        )
         return error_response(500, "internal_error", "An unexpected local service error occurred.")
 
 

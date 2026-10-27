@@ -50,14 +50,18 @@ jobs:
           npm test
           npm run test:tooling
           npm run check:source
+      - name: Install Chromium and Linux browser dependencies
+        if: runner.os == 'Linux'
+        timeout-minutes: 8
+        run: npx playwright install --with-deps chromium
       - name: Real-service browser workflows
         if: runner.os == 'Linux'
-        run: |
-          npx playwright install --with-deps chromium
-          npm run test:e2e
+        timeout-minutes: 6
+        run: npm run test:e2e
       - name: Frontend production build
         run: npm run build
   desktop:
+    if: github.event_name != 'pull_request' || github.actor != 'dependabot[bot]'
     name: Installer (${{ matrix.target }})
     needs: quality
     runs-on: ${{ matrix.os }}
