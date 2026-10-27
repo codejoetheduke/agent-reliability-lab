@@ -13,6 +13,7 @@ export const configSchema = z.object({
   provider_timeout_seconds: z.number(),
   history_storage: z.string(),
   credentials_in_frontend: z.boolean(),
+  notion_api_version: z.string().default('2026-03-11'),
 });
 export type Config = z.infer<typeof configSchema>;
 export function useConfig() {

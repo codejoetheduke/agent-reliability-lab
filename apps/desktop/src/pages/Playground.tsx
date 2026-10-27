@@ -6,6 +6,7 @@ import {
   Chip,
   CircularProgress,
   Link,
+  MenuItem,
   Stack,
   TextField,
   Typography,
@@ -14,7 +15,9 @@ import SendRounded from '@mui/icons-material/SendRounded';
 import StorageRounded from '@mui/icons-material/StorageRounded';
 import { EmptyState, Panel } from '../components/Panel';
 import { apiRequest } from '../api/client';
-import { answerSchema, type AgentAnswer, type SourceRecord } from '../api/contracts';
+import { answerSchema, recordSchema, type AgentAnswer, type SourceRecord } from '../api/contracts';
+import { z } from 'zod';
+import { useConfig } from '../hooks/useConfig';
 import { md3 } from '../theme';
 import { ProviderControls } from '../components/ProviderControls';
 import { defaultExecution, type ProviderName } from '../api/execution';
@@ -29,6 +32,8 @@ const examples = [
 
 export function Playground({ onModeChange }: { onModeChange: (provider: ProviderName) => void }) {
   const [execution, setExecution] = useState(defaultExecution);
+  const [source, setSource] = useState<'synthetic' | 'notion'>('synthetic');
+  const { config } = useConfig();
   const [question, setQuestion] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [sources, setSources] = useState<SourceRecord[]>([]);
@@ -50,6 +55,7 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
           method: 'POST',
           body: JSON.stringify({
             question: submitted,
+            source,
             provider: execution.provider,
             model: execution.model || null,
             allow_external_transmission: execution.consent,
@@ -70,22 +76,79 @@ export function Playground({ onModeChange }: { onModeChange: (provider: Provider
       if (!controller.signal.aborted) setBusy(false);
     }
   }
+  async function inspectNotion() {
+    setBusy(true);
+    setError('');
+    const controller = new AbortController();
+    pending.current = controller;
+    try {
+      const records = z
+        .array(recordSchema)
+        .parse(
+          await apiRequest('/notion/records', { signal: controller.signal, timeoutMs: 95000 }),
+        );
+      if (!controller.signal.aborted) {
+        setSources(records);
+        setSelected(null);
+      }
+    } catch (failure) {
+      if (!controller.signal.aborted)
+        setError(failure instanceof Error ? failure.message : 'Source inspection failed.');
+    } finally {
+      if (!controller.signal.aborted) setBusy(false);
+    }
+  }
   return (
     <Box className="playground-grid">
       <Panel
         title="Conversation"
         action={
           <Chip
-            label={
-              execution.provider === 'mock' ? 'Synthetic · mock provider' : 'Synthetic · OpenAI'
-            }
+            label={`${source === 'synthetic' ? 'Synthetic' : 'Notion read-only'} · ${execution.provider === 'mock' ? 'mock provider' : 'OpenAI'}`}
             size="small"
             variant="outlined"
           />
         }
       >
         <Box sx={{ p: 3, pb: 0 }}>
+          <TextField
+            select
+            label="Workspace source"
+            value={source}
+            fullWidth
+            disabled={busy}
+            sx={{ mb: 2 }}
+            onChange={(event) => {
+              setSource(event.target.value as typeof source);
+              setMessages([]);
+              setSources([]);
+              setError('');
+              setExecution((previous) => ({ ...previous, consent: false }));
+            }}
+          >
+            <MenuItem value="synthetic">Synthetic workspace fixtures</MenuItem>
+            <MenuItem value="notion" disabled={!config?.notion_configured}>
+              Selected Notion test pages · read only
+            </MenuItem>
+          </TextField>
           <ProviderControls value={execution} onChange={setExecution} onModeChange={onModeChange} />
+          {source === 'notion' && (
+            <>
+              <Alert severity="info" sx={{ mt: 2 }}>
+                Only selected pages and contained descendants are read. Notion content stays out of
+                evaluation history. The mock provider can inspect sources but abstains without
+                labeled fixture facts.
+              </Alert>
+              <Button
+                variant="outlined"
+                sx={{ mt: 2 }}
+                disabled={busy}
+                onClick={() => void inspectNotion()}
+              >
+                Inspect selected Notion pages
+              </Button>
+            </>
+          )}
         </Box>
         <Box className="conversation-messages" aria-live="polite">
           {messages.length === 0 && (

@@ -20,6 +20,7 @@ class ConfigStatus(StrictModel):
     provider_timeout_seconds: float
     history_storage: str
     credentials_in_frontend: bool
+    notion_api_version: str = "2026-03-11"
 
 
 @dataclass(frozen=True)
@@ -86,8 +87,10 @@ def public_config() -> dict:
         "openai_configured": bool(settings.openai_key.get_secret_value()),
         "openai_model": settings.model,
         "mock_available": True,
-        "notion_configured": False,
-        "notion_scope_count": 0,
+        "notion_configured": bool(setting("NOTION_API_KEY") and setting("NOTION_ROOT_PAGE_IDS")),
+        "notion_scope_count": len(
+            [item for item in setting("NOTION_ROOT_PAGE_IDS").split(",") if item.strip()]
+        ),
         "notion_read_only": True,
         "pricing_configured": settings.input_price is not None
         and settings.output_price is not None,

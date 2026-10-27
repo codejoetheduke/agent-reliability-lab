@@ -14,7 +14,8 @@ from reliability_lab.action_routes import router as action_router
 from reliability_lab.actions import ActionError
 from reliability_lab.agent import Agent
 from reliability_lab.config import ConfigStatus, public_config
-from reliability_lab.domain import AgentAnswer, QueryRequest
+from reliability_lab.domain import AgentAnswer, QueryRequest, Record
+from reliability_lab.notion import NOTION_VERSION, SourceError, get_notion_source
 from reliability_lab.providers import ProviderError, get_provider
 from reliability_lab.routes import router
 from reliability_lab.schemas import ErrorResponse, HealthResponse
@@ -131,19 +132,54 @@ async def health() -> HealthResponse:
 
 @app.post("/agent/query", response_model=AgentAnswer)
 async def query_agent(request: QueryRequest) -> AgentAnswer:
-    if request.source != "synthetic":
-        from fastapi import HTTPException
-
-        raise HTTPException(503, "The requested adapter is not configured.")
     if request.provider == "openai" and not request.allow_external_transmission:
         from fastapi import HTTPException
 
         raise HTTPException(400, "Explicit external transmission consent is required.")
-    return await Agent(SyntheticWorkspace(), get_provider(request.provider, request.model)).query(
-        request
-    )
+    source = get_notion_source() if request.source == "notion" else SyntheticWorkspace()
+    return await Agent(source, get_provider(request.provider, request.model)).query(request)
 
 
 @app.get("/config", response_model=ConfigStatus)
 async def configuration():
     return public_config()
+
+
+@app.exception_handler(SourceError)
+async def source_error(_request: Request, exc: SourceError):
+    status = (
+        403
+        if exc.code in {"permission_denied", "scope_violation"}
+        else 429
+        if exc.code == "rate_limited"
+        else 504
+        if exc.code == "timeout"
+        else 503
+        if exc.code == "not_configured"
+        else 502
+    )
+    return error_response(status, "notion_" + exc.code, str(exc))
+
+
+@app.post("/notion/check")
+async def check_notion():
+    source = get_notion_source()
+    records = await source.records()
+    return {
+        "connected": True,
+        "root_count": len(source.roots),
+        "record_count": len(records),
+        "read_only": True,
+        "api_version": NOTION_VERSION,
+    }
+
+
+@app.get("/notion/records", response_model=list[Record])
+async def notion_records():
+    return await get_notion_source().records()
+
+
+@app.post("/notion/clear-cache")
+async def clear_notion_cache():
+    await get_notion_source().clear_cache()
+    return {"cleared": True}
