@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 from reliability_lab.agent import Agent
-from reliability_lab.config import public_config
+from reliability_lab.config import ConfigStatus, public_config
 from reliability_lab.domain import AgentAnswer, QueryRequest
 from reliability_lab.providers import ProviderError, get_provider
 from reliability_lab.routes import router
@@ -119,6 +119,6 @@ async def query_agent(request: QueryRequest) -> AgentAnswer:
     )
 
 
-@app.get("/config")
+@app.get("/config", response_model=ConfigStatus)
 async def configuration():
     return public_config()

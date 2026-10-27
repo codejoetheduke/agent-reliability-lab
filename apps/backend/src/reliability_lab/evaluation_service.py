@@ -62,7 +62,7 @@ async def perform_run(run_id: str, store: Store):
             if result["error"] in {"not_configured", "quota_exhausted"}:
                 run.update(
                     status="failed",
-                    error="Evaluation stopped: provider configuration or API credits require attention.",
+                    error="Evaluation stopped: check provider configuration or API credits.",
                 )
                 break
         else:

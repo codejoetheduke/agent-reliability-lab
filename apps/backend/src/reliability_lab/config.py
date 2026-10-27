@@ -6,6 +6,21 @@ from pathlib import Path
 
 from pydantic import SecretStr
 
+from reliability_lab.domain import StrictModel
+
+
+class ConfigStatus(StrictModel):
+    openai_configured: bool
+    openai_model: str
+    mock_available: bool
+    notion_configured: bool
+    notion_scope_count: int
+    notion_read_only: bool
+    pricing_configured: bool
+    provider_timeout_seconds: float
+    history_storage: str
+    credentials_in_frontend: bool
+
 
 @dataclass(frozen=True)
 class Settings:

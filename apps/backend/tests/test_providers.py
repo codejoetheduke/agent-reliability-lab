@@ -6,7 +6,7 @@ import pytest
 from pydantic import SecretStr
 
 from reliability_lab.agent import Agent
-from reliability_lab.config import Settings
+from reliability_lab.config import Settings, get_settings, public_config
 from reliability_lab.domain import QueryRequest
 from reliability_lab.main import app
 from reliability_lab.providers import OpenAIProvider, ProviderError
@@ -17,6 +17,16 @@ SENTINEL = "unit-test-credential-never-real"
 
 def settings():
     return Settings(SecretStr(SENTINEL), "gpt-4.1-mini", 1, 2, 4)
+
+
+def test_private_credential_file_never_enters_public_configuration(tmp_path, monkeypatch):
+    file = tmp_path / "private.json"
+    file.write_text(json.dumps({"OPENAI_API_KEY": SENTINEL}))
+    monkeypatch.setenv("LAB_CREDENTIALS_FILE", str(file))
+    monkeypatch.delenv("OPENAI_API_KEY")
+    assert get_settings().openai_key.get_secret_value() == SENTINEL
+    assert public_config()["openai_configured"]
+    assert SENTINEL not in json.dumps(public_config())
 
 
 def response(data=None, usage=None):
