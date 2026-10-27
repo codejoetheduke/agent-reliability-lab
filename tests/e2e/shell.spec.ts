@@ -125,3 +125,51 @@ test('mock task actions require review and confirmation before mutation', async 
   await page.getByRole('button', { name: 'Clear mock data', exact: true }).click();
   await expect(page.getByRole('table', { name: 'Mock tasks' })).not.toBeVisible();
 });
+
+test('completed runs compare with real metrics and reject incompatible settings', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  const token = await page.locator('meta[name="lab-session"]').getAttribute('content');
+  const headers = { 'X-Lab-Token': token! };
+  const ids: string[] = [];
+  for (const [label, top_k] of [
+    ['Comparison A', 4],
+    ['Comparison B', 4],
+    ['Different retrieval', 1],
+  ] as const) {
+    const response = await page.request.post('http://127.0.0.1:8765/runs', {
+      headers,
+      data: { label, top_k },
+    });
+    expect(response.status()).toBe(202);
+    ids.push((await response.json()).id);
+  }
+  await expect
+    .poll(
+      async () =>
+        (await (await page.request.get(`http://127.0.0.1:8765/runs/${ids[2]}`, { headers })).json())
+          .status,
+    )
+    .toBe('completed');
+  await page.getByRole('navigation').getByRole('button', { name: 'Model Comparison' }).click();
+  await page.getByRole('combobox', { name: 'Run A', exact: true }).click();
+  await page.getByRole('option', { name: /Comparison A/ }).click();
+  await page.getByRole('combobox', { name: 'Run B', exact: true }).click();
+  await page.getByRole('option', { name: /Comparison B/ }).click();
+  await page.getByRole('button', { name: 'Compare runs', exact: true }).click();
+  await expect(
+    page.getByText('0 improved · 0 regressed · 29 unchanged test outcomes'),
+  ).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Metric comparison', exact: true })).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Latency histogram data' })).toBeVisible();
+  await page.screenshot({ path: 'docs/screenshots/comparison.png', fullPage: true });
+  await page.getByRole('combobox', { name: 'Run B', exact: true }).click();
+  await page.getByRole('option', { name: /Different retrieval/ }).click();
+  await page.getByRole('button', { name: 'Compare runs', exact: true }).click();
+  await expect(page.getByText('These runs cannot be compared')).toBeVisible();
+  await expect(page.getByText(/Incompatible condition: top_k/)).toBeVisible();
+  expect(errors).toEqual([]);
+});

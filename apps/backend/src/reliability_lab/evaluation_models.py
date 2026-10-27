@@ -1,7 +1,7 @@
 from typing import Literal
 
-from reliability_lab.domain import AgentAnswer, StrictModel
-from reliability_lab.evaluation import TestCase
+from reliability_lab.domain import AgentAnswer, Record, StrictModel
+from reliability_lab.evaluation import Dataset, TestCase
 
 
 class Rate(StrictModel):
@@ -62,6 +62,9 @@ class RunSummary(StrictModel):
     model: str
     simulated: bool
     prompt_version: str = "legacy-mock-v1"
+    conditions_hash: str | None = None
+    execution_settings: dict | None = None
+    pricing: dict | None = None
     total_tests: int
     summary: Summary | None
     error: str | None
@@ -69,6 +72,8 @@ class RunSummary(StrictModel):
 
 class RunDetail(RunSummary):
     results: list[CaseResult]
+    dataset_snapshot: Dataset | None = None
+    fixture_snapshot: list[Record] | None = None
 
 
 class DatasetInfo(StrictModel):

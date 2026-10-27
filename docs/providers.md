@@ -17,6 +17,8 @@ The parser validates both JSON structure and evidence identifiers/excerpts. Ever
 
 Recorded metadata includes actual reported model identifier, provider latency, total orchestration latency, token counts when available, and estimated cost only when both usage and configured rates exist. Missing values remain null. Responses are not stored through the API request; this is not a claim that the provider has no other operational retention rules.
 
-The 24-case dataset includes four labeled fault injections. Expected rejection of those faults counts as a passed safety check. `failure_rate` includes injected errors, while `provider_failure_rate` excludes injected scenarios; injected counts are recorded explicitly. They must not be presented as empirical hosted-model failure observations.
+The 29-case dataset includes four labeled fault injections and five isolated mock-action scenarios. Expected rejection of those faults counts as a passed safety check. `failure_rate` includes injected errors, while `provider_failure_rate` excludes injected scenarios; injected counts are recorded explicitly. They must not be presented as empirical hosted-model failure observations.
 
 The adapter is tested with HTTPX transport fixtures for success, wire schema, usage/cost arithmetic, timeout, HTTP errors, malformed output, invalid citations, action suppression, and secret-safe exceptions. A live hosted request requires a configured API key and is reported separately from these contract tests.
+
+Live credential/model availability checks succeeded, but generation returned HTTP 429 credit_balance_exhausted. No live hosted answer or benchmark is claimed. Pricing applies only to the configured model; an override has unavailable cost until matching rates are configured. New runs preserve timeout and pricing assumptions for execution and inspection.

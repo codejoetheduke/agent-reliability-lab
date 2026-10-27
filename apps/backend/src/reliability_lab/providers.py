@@ -247,6 +247,7 @@ class OpenAIProvider:
                 and output_tokens is not None
                 and self.settings.input_price is not None
                 and self.settings.output_price is not None
+                and self.model == self.settings.model
             ):
                 cost = (
                     input_tokens * self.settings.input_price

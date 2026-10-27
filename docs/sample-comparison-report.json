@@ -1,0 +1,553 @@
+{
+  "comparable": true,
+  "reasons": [],
+  "warnings": [
+    "Wilson 95% intervals are descriptive for curated, correlated cases; they do not establish statistical significance or population accuracy.",
+    "Both runs are simulated mock workflows, not hosted-model benchmarks.",
+    "Estimated cost is unavailable in one or both runs."
+  ],
+  "left": {
+    "id": "ebb3b73d79a24f43b026185592f56d85",
+    "created_at": "2026-10-27T17:13:50.244622+00:00",
+    "status": "completed",
+    "dataset_id": "synthetic-v1",
+    "dataset_version": "1.2.0",
+    "dataset_hash": "82baf4ac8d373aafb0e2fcfc2067c29d02219c3ec026cc448c5eef7a2f957025",
+    "fixture_hash": "41b7626538fe2f98d63172416cbb57395ab2c56227e7023665a4fe17641aef3d",
+    "metric_version": "extractive-v1",
+    "top_k": 4,
+    "label": "Mock baseline A",
+    "provider": "mock",
+    "model": "extractive-mock-v1",
+    "simulated": true,
+    "prompt_version": "extractive-grounding-v1",
+    "conditions_hash": "b9417380073efb6a33b3964c413390d824943de11b1053f5cb049c46b7539de6",
+    "execution_settings": {
+      "retrieval": "lexical-v1",
+      "answer_validation": "extractive-grounding-v1",
+      "action_policy": "sqlite-transactional-v1",
+      "source": "synthetic-fixtures",
+      "provider_timeout_seconds": null,
+      "max_output_tokens": null
+    },
+    "pricing": null,
+    "total_tests": 29,
+    "summary": {
+      "tests_completed": 29,
+      "tests_passed": 29,
+      "pass_rate": {
+        "numerator": 29,
+        "denominator": 29,
+        "value": 1.0
+      },
+      "failure_rate": {
+        "numerator": 4,
+        "denominator": 29,
+        "value": 0.13793103448275862
+      },
+      "provider_failure_rate": {
+        "numerator": 0,
+        "denominator": 20,
+        "value": 0.0
+      },
+      "injected_faults": 4,
+      "metrics": {
+        "action_parameter_correctness": {
+          "numerator": 4,
+          "denominator": 4,
+          "value": 1.0
+        },
+        "action_selection": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "appropriate_abstention": {
+          "numerator": 7,
+          "denominator": 7,
+          "value": 1.0
+        },
+        "citation_correctness": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        },
+        "deadline_correctness": {
+          "numerator": 4,
+          "denominator": 4,
+          "value": 1.0
+        },
+        "duplicate_prevention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "execution_authorization": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "extractive_claim_support": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        },
+        "labeled_answer_checks": {
+          "numerator": 20,
+          "denominator": 20,
+          "value": 1.0
+        },
+        "precision_at_k": {
+          "numerator": 16,
+          "denominator": 80,
+          "value": 0.2
+        },
+        "recall_at_k": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "recovery_behavior": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "required_sources_retrieved": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        }
+      },
+      "failures_by_category": {},
+      "latency_ms": {
+        "median": 0.646,
+        "p95": 29.1174,
+        "mean": 4.937689655172414,
+        "values": [
+          0.901,
+          0.487,
+          0.481,
+          0.469,
+          0.531,
+          0.68,
+          0.471,
+          0.461,
+          0.748,
+          0.478,
+          0.707,
+          0.922,
+          0.73,
+          0.646,
+          0.755,
+          0.682,
+          0.325,
+          0.685,
+          0.605,
+          0.61,
+          0.249,
+          0.249,
+          0.213,
+          0.275,
+          32.428,
+          15.764,
+          23.534,
+          28.734,
+          29.373
+        ]
+      },
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_cost_usd": null
+    },
+    "error": null
+  },
+  "right": {
+    "id": "2ff3dfef2f5e43d886267ddf7c7234e5",
+    "created_at": "2026-10-27T17:13:51.147950+00:00",
+    "status": "completed",
+    "dataset_id": "synthetic-v1",
+    "dataset_version": "1.2.0",
+    "dataset_hash": "82baf4ac8d373aafb0e2fcfc2067c29d02219c3ec026cc448c5eef7a2f957025",
+    "fixture_hash": "41b7626538fe2f98d63172416cbb57395ab2c56227e7023665a4fe17641aef3d",
+    "metric_version": "extractive-v1",
+    "top_k": 4,
+    "label": "Mock baseline B",
+    "provider": "mock",
+    "model": "extractive-mock-v1",
+    "simulated": true,
+    "prompt_version": "extractive-grounding-v1",
+    "conditions_hash": "b9417380073efb6a33b3964c413390d824943de11b1053f5cb049c46b7539de6",
+    "execution_settings": {
+      "retrieval": "lexical-v1",
+      "answer_validation": "extractive-grounding-v1",
+      "action_policy": "sqlite-transactional-v1",
+      "source": "synthetic-fixtures",
+      "provider_timeout_seconds": null,
+      "max_output_tokens": null
+    },
+    "pricing": null,
+    "total_tests": 29,
+    "summary": {
+      "tests_completed": 29,
+      "tests_passed": 29,
+      "pass_rate": {
+        "numerator": 29,
+        "denominator": 29,
+        "value": 1.0
+      },
+      "failure_rate": {
+        "numerator": 4,
+        "denominator": 29,
+        "value": 0.13793103448275862
+      },
+      "provider_failure_rate": {
+        "numerator": 0,
+        "denominator": 20,
+        "value": 0.0
+      },
+      "injected_faults": 4,
+      "metrics": {
+        "action_parameter_correctness": {
+          "numerator": 4,
+          "denominator": 4,
+          "value": 1.0
+        },
+        "action_selection": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "appropriate_abstention": {
+          "numerator": 7,
+          "denominator": 7,
+          "value": 1.0
+        },
+        "citation_correctness": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        },
+        "deadline_correctness": {
+          "numerator": 4,
+          "denominator": 4,
+          "value": 1.0
+        },
+        "duplicate_prevention": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "execution_authorization": {
+          "numerator": 5,
+          "denominator": 5,
+          "value": 1.0
+        },
+        "extractive_claim_support": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        },
+        "labeled_answer_checks": {
+          "numerator": 20,
+          "denominator": 20,
+          "value": 1.0
+        },
+        "precision_at_k": {
+          "numerator": 16,
+          "denominator": 80,
+          "value": 0.2
+        },
+        "recall_at_k": {
+          "numerator": 16,
+          "denominator": 16,
+          "value": 1.0
+        },
+        "recovery_behavior": {
+          "numerator": 1,
+          "denominator": 1,
+          "value": 1.0
+        },
+        "required_sources_retrieved": {
+          "numerator": 14,
+          "denominator": 14,
+          "value": 1.0
+        }
+      },
+      "failures_by_category": {},
+      "latency_ms": {
+        "median": 0.799,
+        "p95": 39.28239999999999,
+        "mean": 7.179586206896552,
+        "values": [
+          1.131,
+          0.806,
+          0.517,
+          0.872,
+          3.572,
+          0.771,
+          0.807,
+          0.806,
+          0.595,
+          0.825,
+          0.736,
+          0.799,
+          0.889,
+          0.737,
+          0.726,
+          0.815,
+          0.468,
+          0.668,
+          0.747,
+          0.629,
+          0.272,
+          0.268,
+          0.3,
+          0.363,
+          35.709,
+          27.581,
+          37.024,
+          47.987,
+          40.788
+        ]
+      },
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_cost_usd": null
+    },
+    "error": null
+  },
+  "metrics": [
+    {
+      "name": "action_parameter_correctness",
+      "left": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "action_selection",
+      "left": {
+        "numerator": 5,
+        "denominator": 5,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 5,
+        "denominator": 5,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "appropriate_abstention",
+      "left": {
+        "numerator": 7,
+        "denominator": 7,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 7,
+        "denominator": 7,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "citation_correctness",
+      "left": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "deadline_correctness",
+      "left": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 4,
+        "denominator": 4,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "duplicate_prevention",
+      "left": {
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "execution_authorization",
+      "left": {
+        "numerator": 5,
+        "denominator": 5,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 5,
+        "denominator": 5,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "extractive_claim_support",
+      "left": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "labeled_answer_checks",
+      "left": {
+        "numerator": 20,
+        "denominator": 20,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 20,
+        "denominator": 20,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "precision_at_k",
+      "left": {
+        "numerator": 16,
+        "denominator": 80,
+        "value": 0.2
+      },
+      "right": {
+        "numerator": 16,
+        "denominator": 80,
+        "value": 0.2
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "recall_at_k",
+      "left": {
+        "numerator": 16,
+        "denominator": 16,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 16,
+        "denominator": 16,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "recovery_behavior",
+      "left": {
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 1,
+        "denominator": 1,
+        "value": 1.0
+      },
+      "delta": 0.0
+    },
+    {
+      "name": "required_sources_retrieved",
+      "left": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "right": {
+        "numerator": 14,
+        "denominator": 14,
+        "value": 1.0
+      },
+      "delta": 0.0
+    }
+  ],
+  "left_pass_interval": {
+    "lower": 0.8830302015002593,
+    "upper": 1.0
+  },
+  "right_pass_interval": {
+    "lower": 0.8830302015002593,
+    "upper": 1.0
+  },
+  "case_differences": [],
+  "latency_histogram": [
+    {
+      "start_ms": 0.0,
+      "end_ms": 7.997841331166666,
+      "left_count": 24,
+      "right_count": 24
+    },
+    {
+      "start_ms": 7.997841331166666,
+      "end_ms": 15.995682662333332,
+      "left_count": 1,
+      "right_count": 0
+    },
+    {
+      "start_ms": 15.995682662333332,
+      "end_ms": 23.9935239935,
+      "left_count": 1,
+      "right_count": 0
+    },
+    {
+      "start_ms": 23.9935239935,
+      "end_ms": 31.991365324666663,
+      "left_count": 2,
+      "right_count": 1
+    },
+    {
+      "start_ms": 31.991365324666663,
+      "end_ms": 39.98920665583333,
+      "left_count": 1,
+      "right_count": 2
+    },
+    {
+      "start_ms": 39.98920665583333,
+      "end_ms": 47.987047987,
+      "left_count": 0,
+      "right_count": 2
+    }
+  ],
+  "improved": 0,
+  "regressed": 0,
+  "unchanged": 29
+}

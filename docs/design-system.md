@@ -17,7 +17,7 @@ References: [MUI overview](https://mui.com/material-ui/getting-started/), [MUI t
 
 `theme.ts` defines design roles and component defaults. `components/Navigation.tsx` owns navigation presentation. `components/Panel.tsx` supplies shared panel and empty-state components. `pages/Overview.tsx` and `pages/WorkspacePage.tsx` own section layouts. `App.tsx` composes these with the existing connection hook. Agent orchestration remains outside presentation code.
 
-This redesign preserves Milestone 1's behavior: mock mode, health checks, empty run history, and unavailable operations. It does not invent agent responses or benchmark measurements. The chosen palette is light-only; dark mode is not implemented.
+The design covers conversations, sources, evaluation progress/details, comparison charts and equivalent tables, action review dialogs, and retention controls. Loading states and unavailable measurements stay explicit. Recharts uses primary/tertiary roles, legends, labeled axes, keyboard accessibility, and fixed-height responsive containers. Feature pages load lazily. The palette is light-only; dark mode is not implemented.
 
 ## Verification
 

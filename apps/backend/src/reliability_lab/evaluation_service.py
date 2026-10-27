@@ -1,3 +1,4 @@
+from dataclasses import replace
 from typing import Literal
 
 from pydantic import Field
@@ -5,7 +6,7 @@ from pydantic import Field
 from reliability_lab.config import get_settings
 from reliability_lab.domain import StrictModel
 from reliability_lab.evaluation import METRIC_VERSION, aggregate, digest, execute_case, load_dataset
-from reliability_lab.providers import PROMPT_VERSION, get_provider
+from reliability_lab.providers import PROMPT_VERSION, OpenAIProvider, get_provider
 from reliability_lab.storage import Store
 from reliability_lab.workspace import SyntheticWorkspace
 
@@ -27,6 +28,16 @@ async def prepare_run(request: RunRequest, store: Store) -> dict:
     if request.provider == "openai" and not request.allow_external_transmission:
         raise ValueError("External transmission consent is required.")
     fixtures = [record.model_dump() for record in await SyntheticWorkspace().records()]
+    settings = get_settings() if request.provider == "openai" else None
+    selected_model = request.model or (settings.model if settings else "extractive-mock-v1")
+    conditions = {
+        "retrieval": "lexical-v1",
+        "answer_validation": "extractive-grounding-v1",
+        "action_policy": "sqlite-transactional-v1",
+        "source": "synthetic-fixtures",
+        "provider_timeout_seconds": settings.timeout_seconds if settings else None,
+        "max_output_tokens": 2000 if settings else None,
+    }
     return store.create_run(
         {
             "dataset_id": dataset.id,
@@ -42,6 +53,17 @@ async def prepare_run(request: RunRequest, store: Store) -> dict:
             else request.model or get_settings().model,
             "simulated": request.provider == "mock",
             "prompt_version": PROMPT_VERSION,
+            "conditions_hash": digest(conditions),
+            "execution_settings": conditions,
+            "pricing": {
+                "model": selected_model,
+                "input_per_million": settings.input_price,
+                "output_per_million": settings.output_price,
+            }
+            if settings and selected_model == settings.model
+            else None,
+            "dataset_snapshot": dataset.model_dump(),
+            "fixture_snapshot": fixtures,
             "total_tests": len(dataset.cases),
         }
     )
@@ -54,8 +76,33 @@ async def perform_run(run_id: str, store: Store):
     run["status"] = "running"
     store.save_run(run)
     try:
-        for case in load_dataset(run["dataset_id"]).cases:
-            result = await execute_case(case, run["top_k"], run["provider"], run["model"])
+        from reliability_lab.domain import Record
+        from reliability_lab.evaluation import Dataset
+
+        dataset = (
+            Dataset.model_validate(run["dataset_snapshot"])
+            if run.get("dataset_snapshot")
+            else load_dataset(run["dataset_id"])
+        )
+        fixtures = (
+            [Record.model_validate(record) for record in run["fixture_snapshot"]]
+            if run.get("fixture_snapshot")
+            else None
+        )
+        adapter = get_provider(run["provider"], run["model"])
+        if isinstance(adapter, OpenAIProvider) and run.get("execution_settings"):
+            pricing = run.get("pricing") or {}
+            adapter.settings = replace(
+                adapter.settings,
+                model=run["model"],
+                timeout_seconds=run["execution_settings"]["provider_timeout_seconds"],
+                input_price=pricing.get("input_per_million"),
+                output_price=pricing.get("output_per_million"),
+            )
+        for case in dataset.cases:
+            result = await execute_case(
+                case, run["top_k"], run["provider"], run["model"], fixtures, adapter
+            )
             run["results"].append(result)
             run["summary"] = aggregate(run["results"])
             store.save_run(run)

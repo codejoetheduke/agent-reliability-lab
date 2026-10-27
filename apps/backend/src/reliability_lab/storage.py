@@ -73,7 +73,11 @@ class Store:
                 (limit, offset),
             ).fetchall()
         return [
-            {key: value for key, value in json.loads(row["payload"]).items() if key != "results"}
+            {
+                key: value
+                for key, value in json.loads(row["payload"]).items()
+                if key not in {"results", "dataset_snapshot", "fixture_snapshot"}
+            }
             for row in rows
         ]
 
@@ -124,7 +128,11 @@ class Store:
         return {
             "run_count": count,
             "latest_run": latest[0] if latest else None,
-            "metric_run": {k: v for k, v in completed.items() if k != "results"}
+            "metric_run": {
+                k: v
+                for k, v in completed.items()
+                if k not in {"results", "dataset_snapshot", "fixture_snapshot"}
+            }
             if completed
             else None,
             "recent_failures": failures,

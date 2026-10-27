@@ -112,7 +112,7 @@ export function Navigation({
           <Box>
             <Typography variant="subtitle2">Local by design</Typography>
             <Typography variant="caption" color="text.secondary">
-              No external connections
+              Explicit external access
             </Typography>
           </Box>
         </Stack>

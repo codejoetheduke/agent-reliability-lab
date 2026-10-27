@@ -76,9 +76,9 @@ it('navigates all sections and keeps unavailable operations disabled', async () 
     await userEvent.click(nav.getByRole('button', { name }));
     expect(screen.getByRole('heading', { level: 1, name })).toBeVisible();
     if (name === 'Agent Playground')
-      expect(screen.getByRole('button', { name: 'Send question' })).toBeDisabled();
+      expect(await screen.findByRole('button', { name: 'Send question' })).toBeDisabled();
   }
   expect(
-    screen.getByText('Secret values stay in the backend; they are never displayed here.'),
+    await screen.findByText('Secret values stay in the backend; they are never displayed here.'),
   ).toBeVisible();
 });

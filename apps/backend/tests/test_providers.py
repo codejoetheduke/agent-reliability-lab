@@ -107,6 +107,17 @@ def test_unknown_citations_are_rejected():
         )
 
 
+def test_model_override_does_not_reuse_another_models_prices():
+    provider = OpenAIProvider(
+        settings(),
+        "different-model",
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, json=response())),
+    )
+    result = asyncio.run(provider.generate("Who owns Atlas?", []))
+    assert result.input_tokens == 100
+    assert result.estimated_cost_usd is None
+
+
 def test_quota_errors_are_distinguished_without_returning_provider_body():
     transport = httpx.MockTransport(
         lambda _: httpx.Response(

@@ -1,4 +1,5 @@
 import { useRuns } from '../hooks/useRuns';
+import { useConfig } from '../hooks/useConfig';
 import { formatRate, formatTime } from '../api/evaluation';
 import { Alert, Box, Button, Card, Chip, Divider, Stack, Typography } from '@mui/material';
 import ScienceOutlined from '@mui/icons-material/ScienceOutlined';
@@ -33,6 +34,7 @@ export function Overview({
   onNavigate: (page: Page) => void;
 }) {
   const history = useRuns();
+  const { config } = useConfig();
   const stats = history.overview;
   const summary = stats?.metric_run?.summary;
   const metrics = metricDefinitions.map((item, index) => ({
@@ -41,13 +43,13 @@ export function Overview({
       index === 0
         ? stats
           ? String(stats.run_count)
-          : '�'
+          : '—'
         : index === 1
           ? formatRate(summary?.pass_rate)
           : index === 2
             ? formatTime(summary?.latency_ms.median)
             : summary?.estimated_cost_usd == null
-              ? '�'
+              ? '—'
               : `$${summary.estimated_cost_usd.toFixed(4)}`,
     detail:
       index === 0
@@ -70,8 +72,18 @@ export function Overview({
           ? 'Checking…'
           : 'Offline',
     ],
-    ['Model provider', 'Not connected'],
-    ['Notion workspace', 'Not connected'],
+    [
+      'Model provider',
+      config ? (config.openai_configured ? 'OpenAI configured' : 'Mock available') : 'Checking…',
+    ],
+    [
+      'Notion workspace',
+      config
+        ? config.notion_configured
+          ? `${config.notion_scope_count} selected root(s)`
+          : 'Not configured'
+        : 'Checking…',
+    ],
   ];
   return (
     <>
@@ -112,7 +124,7 @@ export function Overview({
         <Panel
           title="Recent experiments"
           action={
-            <Chip label={`${stats?.run_count ?? '�'} runs`} variant="outlined" size="small" />
+            <Chip label={`${stats?.run_count ?? '—'} runs`} variant="outlined" size="small" />
           }
         >
           {history.runs.length ? (
@@ -121,7 +133,7 @@ export function Overview({
                 <Box key={run.id} sx={{ py: 1.5 }}>
                   <Typography variant="h3">{run.label}</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {run.status} � {run.summary?.tests_completed ?? 0}/{run.total_tests} cases �{' '}
+                    {run.status} · {run.summary?.tests_completed ?? 0}/{run.total_tests} cases ·{' '}
                     {run.simulated ? 'Simulated' : 'Hosted model'}
                   </Typography>
                 </Box>
@@ -143,7 +155,7 @@ export function Overview({
                 ? `Most recent: ${stats.latest_run.label}`
                 : stats
                   ? 'No most recent run'
-                  : 'Loading history�'}
+                  : 'Loading history…'}
             </Typography>
             <Button endIcon={<ArrowForwardRounded />} onClick={() => onNavigate('Run History')}>
               View run history
@@ -177,7 +189,8 @@ export function Overview({
           </Box>
           <Box sx={{ m: 3, mt: 2, p: 2, bgcolor: md3.surfaceContainerHigh, borderRadius: 3 }}>
             <Typography variant="body2" color="text.secondary">
-              External connections are introduced in later milestones.
+              Hosted queries require explicit consent. Notion access is read only and limited to
+              selected test pages.
             </Typography>
           </Box>
         </Panel>

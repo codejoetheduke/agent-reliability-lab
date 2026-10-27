@@ -1,11 +1,13 @@
-import { Evaluations } from './Evaluations';
-import { RunHistory } from './RunHistory';
-import { Playground } from './Playground';
-import { Settings } from './Settings';
-import CompareArrowsRounded from '@mui/icons-material/CompareArrowsRounded';
-import { EmptyState, Panel } from '../components/Panel';
+import { lazy, Suspense } from 'react';
+import { LinearProgress } from '@mui/material';
 import type { Page } from '../components/Navigation';
 import type { ProviderName } from '../api/execution';
+
+const Evaluations = lazy(() => import('./Evaluations').then((m) => ({ default: m.Evaluations })));
+const RunHistory = lazy(() => import('./RunHistory').then((m) => ({ default: m.RunHistory })));
+const Playground = lazy(() => import('./Playground').then((m) => ({ default: m.Playground })));
+const Settings = lazy(() => import('./Settings').then((m) => ({ default: m.Settings })));
+const Comparison = lazy(() => import('./Comparison').then((m) => ({ default: m.Comparison })));
 
 export function WorkspacePage({
   page,
@@ -16,16 +18,19 @@ export function WorkspacePage({
   statusText: string;
   onModeChange: (provider: ProviderName) => void;
 }) {
-  if (page === 'Agent Playground') return <Playground onModeChange={onModeChange} />;
-  if (page === 'Evaluations') return <Evaluations onModeChange={onModeChange} />;
-  if (page === 'Run History') return <RunHistory />;
-  if (page === 'Settings') return <Settings statusText={statusText} />;
   return (
-    <Panel title="Compare completed runs" action={<CompareArrowsRounded color="secondary" />}>
-      <EmptyState icon={CompareArrowsRounded} title="Two comparable runs needed">
-        Dataset versions, metric definitions, and test conditions must match before results can be
-        compared.
-      </EmptyState>
-    </Panel>
+    <Suspense fallback={<LinearProgress aria-label="Loading page" />}>
+      {page === 'Agent Playground' ? (
+        <Playground onModeChange={onModeChange} />
+      ) : page === 'Evaluations' ? (
+        <Evaluations onModeChange={onModeChange} />
+      ) : page === 'Run History' ? (
+        <RunHistory />
+      ) : page === 'Settings' ? (
+        <Settings statusText={statusText} />
+      ) : (
+        <Comparison />
+      )}
+    </Suspense>
   );
 }

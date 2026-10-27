@@ -11,8 +11,8 @@ from typing import Any
 from pydantic import Field
 
 from reliability_lab.agent import Agent
-from reliability_lab.domain import AgentAnswer, QueryRequest, StrictModel
-from reliability_lab.providers import FaultProvider, ProviderError, get_provider
+from reliability_lab.domain import AgentAnswer, QueryRequest, Record, StrictModel
+from reliability_lab.providers import FaultProvider, Provider, ProviderError, get_provider
 from reliability_lab.workspace import SyntheticWorkspace
 
 METRIC_VERSION = "extractive-v1"
@@ -167,13 +167,18 @@ def aggregate(results: list[dict]) -> dict:
 
 
 async def execute_case(
-    case: TestCase, top_k: int = 4, provider: str = "mock", model: str | None = None
+    case: TestCase,
+    top_k: int = 4,
+    provider: str = "mock",
+    model: str | None = None,
+    fixtures: list[Record] | None = None,
+    adapter_override: Provider | None = None,
 ) -> dict:
     if case.action_scenario:
         from reliability_lab.action_evaluation import execute_action_case
 
         return execute_action_case(case)
-    all_records = await SyntheticWorkspace().records()
+    all_records = fixtures if fixtures is not None else await SyntheticWorkspace().records()
     selected = (
         all_records
         if case.fixture_ids is None
@@ -181,7 +186,11 @@ async def execute_case(
     )
     started = perf_counter()
     try:
-        adapter = FaultProvider(case.fault) if case.fault else get_provider(provider, model)
+        adapter = (
+            FaultProvider(case.fault)
+            if case.fault
+            else adapter_override or get_provider(provider, model)
+        )
         answer = await Agent(SyntheticWorkspace(selected), adapter).query(
             QueryRequest(question=case.question, top_k=top_k)
         )

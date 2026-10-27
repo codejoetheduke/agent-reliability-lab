@@ -1,24 +1,34 @@
-# Milestone 1 architecture
+# Architecture
 
 ```mermaid
 flowchart LR
-  Launcher[Node local launcher] --> Python[Python / Uvicorn]
-  Launcher --> Tauri[Tauri native process]
-  Tauri --> React[React interface]
-  React --> Hook[Connection state hook]
-  Hook --> Client[Typed health client]
-  Client -->|GET loopback /health| API[FastAPI + Pydantic]
-  Python --> API
+  Launcher[Node supervisor + session nonce] --> Python[Loopback FastAPI]
+  Launcher --> Tauri[Tauri / WebView2]
+  Tauri --> React[React + MUI MD3 + Recharts]
+  React --> Client[Typed Zod API client]
+  Client -->|Session-authorized HTTP| Python
+  Python --> Agent[Agent orchestration]
+  Agent --> Retrieval[Lexical retrieval]
+  Retrieval --> Synthetic[Synthetic source]
+  Retrieval --> Notion[Scoped read-only Notion adapter]
+  Agent --> Provider[Mock / OpenAI provider]
+  Python --> Evaluation[Versioned evaluation + comparison]
+  Evaluation --> Synthetic
+  Evaluation --> SQLite[(Local SQLite history)]
+  Python --> Actions[Confirmed mock action executor]
+  Actions --> SQLite
 ```
 
-The official Tauri scaffold provides the native shell. React owns presentation and navigation only. The API client validates the runtime response as well as the TypeScript contract; an unrelated service on the same port cannot produce a false connected state. The hook aborts stale requests on navigation teardown/retry and polls every 15 seconds. Requests time out after four seconds.
+React owns presentation, provider/source choices, explicit consent, and confirmation dialogs. Retrieval, validation, scoring, comparison, persistence, and action authorization live in Python. Client schemas validate runtime data in addition to strict TypeScript. Feature pages and charts load on demand.
 
-FastAPI exposes a literal, versioned health schema. It reads no environment secrets and performs no external requests. CORS permits only known development and Tauri origins. The process binds to loopback and validates Host headers. Unexpected errors log only a fixed JSON event and return safe generic messages.
+Source and provider protocols are separate: Notion can supply records without invoking a model. Synthetic retrieval is deterministic lexical matching with explicit project scoping; embeddings are deferred. The mock provider extracts labeled facts. Hosted output uses strict JSON and exact excerpts; citations must resolve to retrieved records and verbatim body text. Workspace instructions cannot grant action authority.
 
-The launcher uses explicit process argument arrays, waits for backend readiness, rejects occupied ports, and owns child-process cleanup. Development uses Tauri's supported `beforeDevCommand` to start Vite. Production preview uses embedded frontend assets and a separately installed Python environment. This avoids prematurely building a Python packaging or sidecar distribution system. A release needs a packaged backend and stronger process/authentication guarantees first.
+Runs save dataset/fixture snapshots, hashes, metric/prompt versions, retrieval k, provider/model, pricing assumptions, and execution settings. Sequential background tasks persist each case. Fault injections and isolated action stores are explicit. Restart marks unfinished runs interrupted; there is no distributed queue or automatic resubmission. Comparisons reject missing/incompatible conditions and show measured rates, denominators, shared latency bins, and descriptive intervals.
 
-No database, provider adapter, retrieval pipeline, evaluation engine, chart library, or real connector is included in this milestone. Adding those now would exceed its scope. The run count is zero, and unmeasured statistics are dashes. No synthetic benchmark values are supplied.
+SQLite connections close explicitly, use WAL, and store JSON run payloads plus transactional task/proposal tables. History deletion rejects active runs. Task execution uses immutable proposals, confirmation, idempotency checks, and optimistic resource versions. The executor is local-only with no Notion write adapter.
 
-The interface uses Material UI 9 with an explicit Material Design 3 theme, locally bundled fonts, shared presentation components, and adaptive drawer/rail/mobile navigation. See `design-system.md` for roles and design decisions. The native launcher locates Visual Studio with `vswhere`, initializes its developer environment, and forwards only native toolchain variables without printing them.
+Notion follows configured roots and validated contained descendants, handles current data sources and pagination, uses bounded retries, and rejects excessive snapshots. Actual page content stays in process memory and transient UI state, excluded from benchmark history/reports/fixtures. Hosted submission is an explicit user operation. See `notion.md`.
 
-Windows browser workflows and the native production build/launch are verified. Embedded assets, fonts, and the permitted health request work under the production CSP in WebView2. Adversarial CSP testing, native development HMR, and macOS/Linux execution remain unverified. See `milestone-1.md` for the actual verification record.
+The supervisor binds the API to loopback and gives each launch a random nonce. Native React retrieves it through a narrow Tauri command; browser development HTML receives it through the supervised Vite plugin. Public health validates a service fingerprint; protected requests require the nonce. The launcher rejects occupied ports and cleans up owned children. CORS, Host validation, and CSP add browser boundaries; they do not defend against a compromised user account.
+
+The Windows release embeds frontend assets and uses a separately installed Python environment. Backend packaging, installers, signing, updates, OS credential storage, and public Notion OAuth remain distribution work. macOS/Linux execution and native development HMR remain unverified. Portable structure is not proof of cross-platform compatibility.

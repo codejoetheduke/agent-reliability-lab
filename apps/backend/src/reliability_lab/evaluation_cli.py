@@ -9,9 +9,9 @@ from reliability_lab.evaluation_service import RunRequest, perform_run, prepare_
 from reliability_lab.storage import get_store
 
 
-async def run(output: Path, top_k: int):
+async def run(output: Path, top_k: int, label: str):
     store = get_store()
-    experiment = await prepare_run(RunRequest(top_k=top_k, label="Documented mock baseline"), store)
+    experiment = await prepare_run(RunRequest(top_k=top_k, label=label), store)
     await perform_run(experiment["id"], store)
     result = store.run(experiment["id"])
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -32,5 +32,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=Path("docs/sample-evaluation-report.json"))
     parser.add_argument("--top-k", type=int, default=4, choices=range(1, 11))
+    parser.add_argument("--label", default="Documented mock baseline")
     arguments = parser.parse_args()
-    asyncio.run(run(arguments.output, arguments.top_k))
+    asyncio.run(run(arguments.output, arguments.top_k, arguments.label))

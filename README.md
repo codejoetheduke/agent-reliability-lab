@@ -1,109 +1,122 @@
 # Agent Reliability Lab
 
-A local desktop developer tool for inspectable agent experiments. This implementation is **Milestone 1 only**: Tauri 2, React, strict TypeScript, Vite, Material UI 9 with a Material Design 3 theme, and a separate FastAPI health service. External services, retrieval, AI responses, evaluations, actions, and storage are not implemented yet.
+A Windows desktop developer tool for evidence-grounded agent experiments. Tauri 2 hosts React, strict TypeScript, Vite, Material UI 9 with a Material Design 3 theme, and Recharts. A local FastAPI/Pydantic/HTTPX package handles retrieval, model calls, evaluation, and SQLite history.
 
-The interface always identifies mock mode. Empty metrics represent unavailable measurements, not simulated benchmark results. The existing `api-keys.txt` was not read or used and is excluded by `.gitignore` and the development server's file policy.
+Milestones 1–7 are implemented. Start without credentials in clearly labeled mock mode. Inspect synthetic answers and citations, run the 29-case versioned evaluation, review confirmed mock task actions, inspect selected Notion pages, and compare compatible completed runs. Mock results are simulated workflows, not hosted-model benchmarks.
 
 ## Prerequisites
 
-- Node.js 24 LTS (tested: 24.8.0) and npm.
-- Python 3.11 or newer (tested: 3.12.14), with `venv` and pip.
-- Rust stable with the MSVC target on Windows (installed here: 1.89.0).
-- Windows: Microsoft C++ Build Tools with **Desktop development with C++**, including MSVC x64/x86 and a Windows SDK; Microsoft Edge WebView2 Runtime.
-- Browser smoke tests use installed Microsoft Edge. On another platform install Playwright Chromium and change `channel: 'msedge'` in `playwright.config.ts` to your installed browser or omit it.
+- Node.js and npm (tested: Node 24.8.0).
+- Python 3.11 or newer (tested: 3.12.14).
+- Rust stable with the MSVC target (tested: 1.89.0).
+- Windows: Visual Studio **Desktop development with C++**, MSVC x64/x86, a Windows SDK, and WebView2 Runtime.
+- Browser tests use installed Microsoft Edge. Other platforms need Playwright Chromium and a corresponding change to `playwright.config.ts`.
 
-Follow the [official Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for macOS and Linux system packages. The shell was created with the [official create-tauri-app tool](https://v2.tauri.app/start/create-project/). Those platforms are unverified.
+The shell was created with official Tauri tooling. See [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for macOS/Linux packages; those platforms remain unverified.
 
-## Setup on Windows
+## Setup
 
-From this repository root in PowerShell:
+From the repository root in PowerShell:
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".\apps\backend[dev]"
+.\.venv\Scripts\python.exe -m pip install -r apps/backend/requirements-dev.lock
+.\.venv\Scripts\python.exe -m pip install --no-deps -e apps/backend
 npm.cmd ci
 ```
 
-If `python` resolves to a Windows Store alias, use the full path to your installed Python executable for the first command. No environment activation is needed. The Python launcher `py` on the current development machine does not find an interpreter; setup was tested using an explicit Python 3.12 executable.
+If `python` resolves to a Windows Store alias, use your installed interpreter's absolute path for the first command. No activation is required. On macOS/Linux use `python3`, `.venv/bin/python`, and `npm`.
 
-`apps/backend/requirements-dev.lock` records the actual tested Python dependency versions. For a repeatable development install:
-
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r apps/backend/requirements-dev.lock
-.\.venv\Scripts\python.exe -m pip install --no-deps -e apps/backend
-```
-
-On macOS/Linux use `python3 -m venv .venv`, `.venv/bin/python`, and `npm` in the equivalent commands.
-
-## Run locally
+## Run and build
 
 ```powershell
-npm.cmd run dev
+npm.cmd run dev              # native desktop with development UI
+npm.cmd run dev:web          # browser UI and backend, without native build tools
+npm.cmd run build            # production frontend
+npm.cmd run build:desktop    # native release executable, no installer
+npm.cmd run preview:desktop  # release executable plus supervised Python backend
 ```
 
-The launcher checks that ports 8765 and 1420 are free, starts the backend on **127.0.0.1 only**, waits for a valid mock-mode health response, then runs Tauri. Tauri starts Vite on `http://127.0.0.1:1420`. Closing the desktop process or pressing Ctrl+C stops processes owned by the launcher. Existing services are never reused or terminated. An occupied port fails with a clear message.
+Run one launcher at a time. Browser mode uses `http://127.0.0.1:1420`; the API binds only to `127.0.0.1:8765`. The supervisor rejects occupied ports, starts Python, verifies health, generates a per-launch session nonce, and starts the UI. Closing the native process or pressing Ctrl+C stops its owned child processes. Windows builds discover Visual Studio with `vswhere` and load its toolchain environment without printing it.
 
-You can verify the frontend and backend without native build tools:
+Use the combined launcher: protected API calls require its session nonce. The nonce reaches native React through a minimal Tauri command, or browser development through a generated HTML meta element. Provider credentials never reach either UI. `GET /health` is public; `/docs` describes the API but protected operations still require the session header.
 
-```powershell
-npm.cmd run dev:web
+Production output is `apps/desktop/src-tauri/target/release/agent-reliability-lab.exe`. Python is installed separately and started by the supervisor. Double-clicking the executable alone does not supervise Python. Installers, backend bundling, signing, and updates are outstanding distribution work.
+
+## Private backend configuration
+
+Credentials are optional. Configure environment variables or an external JSON file at `~/.agent-reliability-lab/credentials.json`. All JSON values must be strings. Example placeholders:
+
+```json
+{
+  "OPENAI_API_KEY": "replace-with-private-key",
+  "OPENAI_MODEL": "gpt-4.1-mini",
+  "NOTION_API_KEY": "replace-with-private-internal-connection-token",
+  "NOTION_ROOT_PAGE_IDS": "replace-with-selected-test-page-uuid"
+}
 ```
 
-Open `http://127.0.0.1:1420`. The overview should show **MOCK MODE** and **Backend connected**. This browser mode does not prove that the native window works.
+Keep this file outside the repository and restrict its OS permissions. Never use `VITE_` for credentials. Environment values override the file. `LAB_CREDENTIALS_FILE` selects another private path; an empty value disables file loading. `.env` is a reference only and is not automatically loaded. The originally supplied `api-keys.txt` is ignored by Git and denied by Vite; runtime loads the external private file instead.
 
-For separate terminals (do not also run the combined launcher):
+| Setting                                                         | Meaning                                                                                           |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `OPENAI_API_KEY`, `OPENAI_MODEL`                                | Backend-only Responses API credential and configurable model                                      |
+| `LAB_PROVIDER_TIMEOUT_SECONDS`                                  | Provider request budget, default 30, range 0.1–120 seconds                                        |
+| `OPENAI_INPUT_USD_PER_MILLION`, `OPENAI_OUTPUT_USD_PER_MILLION` | Optional user-maintained flat rates for the configured model; missing rates mean unavailable cost |
+| `NOTION_API_KEY`, `NOTION_ROOT_PAGE_IDS`                        | Internal read-content token and comma-separated selected root page UUIDs                          |
+| `LAB_DATA_DIR`                                                  | Local SQLite directory; default `.local/` in the project                                          |
+| `LAB_PYTHON`                                                    | Optional absolute interpreter path for the launcher                                               |
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn reliability_lab.main:app --host 127.0.0.1 --port 8765 --no-access-log
-npm.cmd run dev --workspace apps/desktop
-```
+Share the selected fictional test page with the Notion internal connection. Use Settings → Check Notion connection, then Playground → Notion → Inspect selected pages. Only contained descendants are traversed. No Notion mutation is implemented. External submission requires selecting OpenAI and granting affirmative question/evidence transmission consent. Evaluations accept only synthetic fixtures.
 
-Stop both manually when started separately. `GET http://127.0.0.1:8765/health` returns the service identifier, status, mock mode, and version. API documentation is available at `http://127.0.0.1:8765/docs`.
+Live development verification: the selected Notion page is readable after sharing. The OpenAI key is valid and the configured model is available, but generation returned HTTP 429 `credit_balance_exhausted`. Live hosted answering remains unverified until account credits are available. The app reports this error and never substitutes mock success.
 
-## Build and run production assets locally
+## Workflows and limits
 
-```powershell
-npm.cmd run build
-npm.cmd run build:desktop
-npm.cmd run preview:desktop
-```
+- **Playground:** lexical retrieval and inspectable sources. The mock provider extracts labeled synthetic facts. Hosted output uses strict JSON and exact quoted claims with validated record IDs; unsupported output is rejected. This conservative baseline does not accept semantic paraphrases.
+- **Evaluations:** dataset `synthetic-v1`, version `1.2.0`, contains 20 QA/restraint cases, four explicit provider-fault injections, and five isolated action cases. Inspect expected criteria, raw outcomes, citations, timing, and metric denominators in run details.
+- **Actions:** structured create/update proposals for a separate local mock task store. Review and confirm immutable proposals. SQLite transactions, idempotency keys, optimistic versions, cancellation, and explicit failed-operation retry protect the lifecycle. Natural-language QA never executes actions. No external task changes occur.
+- **Comparisons:** choose two completed runs. Dataset/fixture hashes, versions, metric/prompt versions, retrieval k, execution conditions, and simulation mode must match. Charts show recorded rates and shared latency bins, with equivalent tables. Wilson intervals are descriptive for curated correlated cases and do not establish statistical significance.
+- **Retention:** Run History offers confirmed history deletion and blocks deletion during active runs. Mock tasks/proposals have a separate confirmed reset. Notion content stays in bounded memory, with a Settings cache-clear control; it is excluded from history/reports. Closing the process discards the cache.
 
-The first command creates the frontend production assets. The second builds the native executable with those assets; `--no-bundle` deliberately avoids generating installers in this milestone. The third runs that executable with the local Python backend. A standalone double-click of the executable does not manage Python. Python is not bundled, so this is a personal development setup, not a distributable application.
+No embeddings, model training, LLM judge, cloud service, PostgreSQL, or Docker is required. Model aliases can change upstream; prefer pinned snapshots for stronger reproducibility. This small curated dataset's mock pass rate is not general agent accuracy.
 
-The Windows SDK is now installed and the earlier native linker blocker is resolved. `scripts/native.mjs` locates Visual Studio with `vswhere` and loads its developer environment before invoking Tauri, so `npm.cmd run dev` and `npm.cmd run build:desktop` work from a normal terminal. It imports only native toolchain environment settings and does not print them. See `docs/milestone-1.md` for the recorded verification results.
-
-## Checks
+## Verification and sample reports
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest apps/backend/tests -q
 .\.venv\Scripts\python.exe -m ruff check apps/backend
+.\.venv\Scripts\python.exe -m ruff format --check apps/backend
 .\.venv\Scripts\python.exe -m pip check
 npm.cmd run typecheck
 npm.cmd run lint
 npm.cmd test
 npm.cmd run test:e2e
-npm.cmd run build
+npm.cmd run build:desktop
 ```
 
-The end-to-end suite owns its backend and Vite processes and uses real HTTP requests. Leave ports 1420 and 8765 free first. It tests desktop, navigation rail, and mobile drawer layouts and writes screenshots to `docs/screenshots/`. Test results are development verification, not agent evaluation results. Some Windows sandboxes block Python subprocesses or Vitest temporary-file renames; use a normal local terminal when that occurs.
+Leave ports 1420/8765 free for E2E tests. They use an isolated SQLite directory, disable private credentials, start real local services, and exercise desktop/rail/mobile layouts, sources, evaluations/history, confirmed actions, and compatible/incompatible comparisons. Screenshots are in `docs/screenshots/`.
 
-## Modules
+Generate an actual synthetic report without a model key:
 
-| Path | Responsibility |
-| --- | --- |
-| `apps/desktop/src/App.tsx` | Six-section shell and health connection presentation |
-| `apps/desktop/src/theme.ts` | Material Design 3 roles, typography, shapes, and component states |
-| `apps/desktop/src/App.css` | Adaptive drawer/rail/mobile layout |
-| `apps/desktop/src/components/`, `src/pages/` | Shared MUI components, section layouts, and honest empty states |
-| `apps/desktop/src/api/client.ts` | Typed health client, runtime validation, four-second timeout |
-| `apps/desktop/src/hooks/useHealth.ts` | Connection polling, cancellation, manual retry |
-| `apps/desktop/src-tauri/` | Native window, restrictive CSP and minimal capabilities |
-| `apps/backend/src/reliability_lab/` | FastAPI health contract, safe errors, host/origin policy |
-| `scripts/dev.mjs` | Cross-platform process supervision and startup readiness |
-| `scripts/native.mjs` | Windows developer-tool environment setup and Tauri invocation |
-| `tests/e2e/` | Real-service browser smoke tests |
-| `docs/` | Architecture, privacy boundary, milestone evidence |
+```powershell
+.\.venv\Scripts\python.exe -m reliability_lab.evaluation_cli --label "Mock baseline A" --output docs/sample-evaluation-report.json
+```
 
-See `docs/architecture.md`, `docs/design-system.md`, and `docs/security.md`. Roboto and Material icons are bundled locally; runtime font requests stay local. No credentials are needed, read, returned, or saved by the implementation. `LAB_PYTHON` is the only optional runtime setting and must be an absolute path. `.env.example` documents it; `.env` files are not loaded automatically.
+The CLI records a local experiment and exports its snapshots and results. [Metric definitions](docs/metrics.md) explain denominators, fault accounting, timing, and unavailable values. [Final verification](docs/milestone-7.md) records actual checks and limits.
 
-Next is Milestone 2: the synthetic workspace and source-inspection playground, **after the native-window acceptance criteria have passed**.
+## Architecture and modules
+
+| Module                                                   | Responsibility                                                      |
+| -------------------------------------------------------- | ------------------------------------------------------------------- |
+| `apps/desktop/src/theme.ts`, `App.css`, `components/`    | Material Design 3 roles, adaptive layout, accessible controls       |
+| `apps/desktop/src/pages/`, `api/`, `hooks/`              | Lazy-loaded features, Zod-validated contracts, polling/cancellation |
+| `apps/desktop/src-tauri/`                                | Native window, CSP, minimal local session IPC                       |
+| `apps/backend/src/reliability_lab/main.py`, `routes.py`  | Validated APIs, session authorization, safe errors                  |
+| `workspace.py`, `agent.py`, `providers.py`, `notion.py`  | Source boundary, retrieval, grounding validation, adapters          |
+| `evaluation*.py`, `comparison.py`, `fixtures/`           | Versioned cases, scoring, snapshots, background runs, comparison    |
+| `actions.py`, `action_routes.py`, `action_evaluation.py` | Confirmed local lifecycle and isolated action tests                 |
+| `storage.py`, `config.py`                                | SQLite history and backend-only settings                            |
+| `scripts/`                                               | Backend/UI supervision and native toolchain setup                   |
+
+See [architecture](docs/architecture.md), [security](docs/security.md), [design system](docs/design-system.md), [providers](docs/providers.md), and [Notion scope/limits](docs/notion.md). Milestone reports preserve incremental implementation and verification.

@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 
+from reliability_lab.comparison import Comparison, compare
 from reliability_lab.evaluation import load_dataset
 from reliability_lab.evaluation_models import (
     CaseResult,
@@ -37,7 +38,11 @@ async def start_run(request: RunRequest, background: BackgroundTasks, store: Sto
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     background.add_task(perform_run, run["id"], store)
-    return {key: value for key, value in run.items() if key != "results"}
+    return {
+        key: value
+        for key, value in run.items()
+        if key not in {"results", "dataset_snapshot", "fixture_snapshot"}
+    }
 
 
 @router.get("/runs", response_model=list[RunSummary])
@@ -78,3 +83,10 @@ async def delete_history(store: StoreDependency):
 @router.get("/overview", response_model=OverviewInfo)
 async def overview(store: StoreDependency):
     return store.overview()
+
+
+@router.get("/comparisons", response_model=Comparison)
+async def comparison(left_id: str, right_id: str, store: StoreDependency):
+    left = await get_run(left_id, store)
+    right = await get_run(right_id, store)
+    return Comparison.model_validate(compare(left, right))
