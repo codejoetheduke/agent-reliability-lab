@@ -12,6 +12,7 @@ if (!token || !repository || tag !== `v${version}`)
 const headers = {
   Authorization: `Bearer ${token}`,
   Accept: 'application/vnd.github+json',
+  'Content-Type': 'application/json',
   'X-GitHub-Api-Version': '2022-11-28',
 };
 async function api(route, options = {}) {

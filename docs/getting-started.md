@@ -59,3 +59,5 @@ Notion records remain in bounded memory, with an explicit Settings cache-clear c
 | No supporting evidence       | Inspect page content, simplify wording, and confirm the fact is actually documented                |
 | Backend unavailable          | Restart the app; check platform/runtime prerequisites and the packaged-sidecar verification record |
 | Source browser port occupied | Stop your previous source launcher; installed builds use their own ephemeral ports                 |
+
+On Windows, run the setup executable. On macOS, open the matching DMG and copy the application into Applications. On supported Debian/Ubuntu systems, install the DEB through your software installer or `sudo apt install ./downloaded-file.deb`. For an AppImage, grant execute permission with `chmod +x downloaded-file.AppImage`, then run it. These steps do not override OS trust checks; the private-preview signing limits described above still apply.

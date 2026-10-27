@@ -6,7 +6,7 @@ Verified locally on Windows, 2026-10-27. The private repository's actual cross-p
 
 | Check                                           | Actual result                                                                                                             |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Backend pytest                                  | 92 passed                                                                                                                 |
+| Backend pytest                                  | 94 passed                                                                                                                 |
 | Frontend Vitest                                 | 6 passed                                                                                                                  |
 | Installer-manifest guard tests                  | 4 passed                                                                                                                  |
 | Playwright / real local services                | 7 passed                                                                                                                  |
@@ -41,6 +41,8 @@ Each suite contains 18 hosted question attempts, two local no-model action refus
 
 ## CI and release evidence
 
+[The initial four-platform build](https://github.com/codejoetheduke/agent-reliability-lab/actions/runs/40582161989) passed all three source-quality jobs and all four native installer jobs. The release workflow repeats these gates for the tagged revision before publishing its assets.
+
 [Cross-platform CI](https://github.com/codejoetheduke/agent-reliability-lab/actions/workflows/ci.yml) validates source checks on Windows/macOS/Linux and produces four native installer targets. The frozen-runtime smoke test runs on each target; macOS also tests the embedded sidecar after bundle signing. [Release CI](https://github.com/codejoetheduke/agent-reliability-lab/actions/workflows/release.yml) publishes only after every required target succeeds and checksum validation passes.
 
 Windows Authenticode signing and Apple notarization credentials are not configured. This release is a private preview, with ad-hoc macOS signing and no trusted public distribution claim. Native GUI interactions on macOS/Linux, public OAuth, live Notion mutations, updates, and universal hardware/distro compatibility are outside the verified scope. See releasing.md for supported targets and signing work.
@@ -48,3 +50,5 @@ Windows Authenticode signing and Apple notarization credentials are not configur
 A subsequent real Gemini request through the standalone frozen executable also succeeded with a validated Atlas citation. The packaged TLS regression was fixed by preserving SSL runtime policy data; the offline smoke test now exercises actual HTTPS initialization through an unused local proxy with a dummy credential. No external call or real key is required for that CI check.
 
 The same frozen executable then completed the full selected-Notion-to-Gemini chain, returning one validated citation with simulated=false. Only counts/model metadata were recorded publicly; actual Notion text and IDs remain private.
+
+The shutdown regression now includes an evaluation waiting on a stalled local proxy. Closing the parent pipe cancels active background work within the service's bounded shutdown window and records the run as interrupted; a unit test verifies that no second provider request is issued after cancellation. Already-submitted remote requests may still be processed by the provider.

@@ -86,6 +86,8 @@ try {
     '--port',
     '8765',
     '--no-access-log',
+    '--timeout-graceful-shutdown',
+    '2',
   ]);
   let healthy = false;
   for (let attempt = 0; attempt < 60; attempt++) {

@@ -58,6 +58,7 @@ child.stderr.on('data', (chunk) => {
   diagnostics = (diagnostics + chunk).slice(-2000);
 });
 const exited = new Promise((resolve) => child.on('exit', (code) => resolve(code)));
+const sockets = [];
 const base = `http://127.0.0.1:${port}`;
 async function request(route, options = {}) {
   return fetch(base + route, {
@@ -130,16 +131,51 @@ try {
   }
   assert.equal(detail.status, 'completed');
   assert.equal(detail.summary.tests_passed, 29);
-  // Graceful parent-pipe closure must terminate both the server and bootloader.
+  // Close during an actual in-flight evaluation, using a local stalled proxy.
+  // No request reaches Google, and the dummy credential cannot authorize one.
+  writeFileSync(credentials, JSON.stringify({ GEMINI_API_KEY: 'unit-test-not-a-real-key' }));
+  let signalConnected;
+  const connected = new Promise((resolve) => {
+    signalConnected = resolve;
+  });
+  proxy.on('connection', (socket) => {
+    sockets.push(socket);
+    signalConnected();
+  });
+  await new Promise((resolve) => proxy.listen(proxyPort, '127.0.0.1', resolve));
+  const pending = await request('/runs', {
+    method: 'POST',
+    body: JSON.stringify({
+      provider: 'gemini',
+      allow_external_transmission: true,
+      label: 'Interrupted frozen evaluation',
+    }),
+  });
+  assert.equal(pending.status, 202);
+  await Promise.race([
+    connected,
+    new Promise((_, reject) =>
+      setTimeout(
+        () => reject(new Error('Provider request did not reach the local test proxy.')),
+        3000,
+      ).unref(),
+    ),
+  ]);
+  // Graceful parent-pipe closure must stop active work and the bootloader.
   child.stdin.end();
   const code = await Promise.race([
     exited,
     new Promise((resolve) => setTimeout(() => resolve('timeout'), 10000)),
   ]);
   assert.equal(code, 0, 'Frozen backend did not stop when its parent closed stdin.');
+  for (const socket of sockets) socket.destroy();
+  await new Promise((resolve) => proxy.close(resolve));
   console.log(
     `Frozen backend verified on ${process.platform}/${process.arch}: live defaults, authorization, fixtures, 29 cases, parent shutdown.`,
   );
 } finally {
+  for (const socket of sockets) socket.destroy();
+  if (proxy.listening) await new Promise((resolve) => proxy.close(resolve));
+  if (!child.stdin.writableEnded) child.stdin.end();
   if (child.exitCode === null) child.kill();
 }

@@ -32,6 +32,7 @@ def main():
             loop="asyncio",
             http="h11",
             lifespan="on",
+            timeout_graceful_shutdown=2,
         )
     )
     if os.environ.get("LAB_PARENT_MANAGED") == "1":
@@ -41,6 +42,9 @@ def main():
                 if sys.stdin is not None:
                     sys.stdin.buffer.read()
             finally:
+                from reliability_lab.evaluation_service import shutdown_requested
+
+                shutdown_requested.set()
                 server.should_exit = True
 
         threading.Thread(target=watch_parent, name="parent-lifetime", daemon=True).start()

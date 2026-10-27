@@ -1,4 +1,6 @@
+import asyncio
 from dataclasses import replace
+from threading import Event
 from typing import Literal
 
 from pydantic import Field
@@ -9,6 +11,10 @@ from reliability_lab.gemini import GeminiProvider
 from reliability_lab.providers import PROMPT_VERSION, OpenAIProvider, get_provider
 from reliability_lab.storage import Store
 from reliability_lab.workspace import SyntheticWorkspace
+
+# The native parent-lifetime watcher sets this before beginning server shutdown.
+# An in-flight response may finish, but it must never start another model call.
+shutdown_requested = Event()
 
 
 class RunRequest(StrictModel):
@@ -106,6 +112,11 @@ async def perform_run(run_id: str, store: Store):
                     ),
                 )
         for case in dataset.cases:
+            if shutdown_requested.is_set():
+                run.update(
+                    status="interrupted", error="The application closed before this run completed."
+                )
+                break
             result = await execute_case(
                 case, run["top_k"], run["provider"], run["model"], fixtures, adapter
             )
@@ -127,6 +138,10 @@ async def perform_run(run_id: str, store: Store):
                 break
         else:
             run["status"] = "completed"
+    except asyncio.CancelledError:
+        run.update(status="interrupted", error="The application closed before this run completed.")
+        store.save_run(run)
+        raise
     except Exception:
         run.update(
             status="failed", error="The evaluation could not complete. Inspect the recorded cases."

@@ -153,3 +153,71 @@ def test_notion_retrieval_accepts_natural_phrasing_without_changing_fixture_poli
     assert retrieve(question, [record], 4) == []
     assert retrieve(question, [record], 4, strict_anchors=False) == [record]
     assert NotionWorkspace.strict_anchors is False
+
+
+def test_cancelled_live_evaluation_is_recorded_without_continuing_calls(tmp_path, monkeypatch):
+    from reliability_lab.evaluation_service import RunRequest, perform_run, prepare_run
+    from reliability_lab.storage import Store
+
+    async def check():
+        entered = asyncio.Event()
+        calls = []
+
+        async def hanging_request(request):
+            calls.append(request.url.path)
+            entered.set()
+            await asyncio.Event().wait()
+            return httpx.Response(200, json=response())
+
+        adapter = GeminiProvider(settings(), transport=httpx.MockTransport(hanging_request))
+        monkeypatch.setattr("reliability_lab.evaluation_service.get_provider", lambda *_: adapter)
+        store = Store(tmp_path / "interrupted.db")
+        run = await prepare_run(
+            RunRequest(provider="gemini", allow_external_transmission=True), store
+        )
+        task = asyncio.create_task(perform_run(run["id"], store))
+        await asyncio.wait_for(entered.wait(), timeout=2)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        assert len(calls) == 1
+        assert store.run(run["id"])["status"] == "interrupted"
+        assert store.run(run["id"])["results"] == []
+
+    asyncio.run(check())
+
+
+def test_parent_shutdown_between_cases_stops_the_next_provider_call(tmp_path, monkeypatch):
+    from reliability_lab.evaluation_service import (
+        RunRequest,
+        perform_run,
+        prepare_run,
+        shutdown_requested,
+    )
+    from reliability_lab.providers import MockProvider
+    from reliability_lab.storage import Store
+
+    calls = []
+
+    class StopAfterResponse(MockProvider):
+        async def generate(self, question, evidence):
+            calls.append(question)
+            answer = await super().generate(question, evidence)
+            shutdown_requested.set()
+            return answer
+
+    async def check():
+        store = Store(tmp_path / "parent-close.db")
+        monkeypatch.setattr(
+            "reliability_lab.evaluation_service.get_provider", lambda *_: StopAfterResponse()
+        )
+        run = await prepare_run(RunRequest(provider="mock"), store)
+        await perform_run(run["id"], store)
+        assert len(calls) == 1
+        assert store.run(run["id"])["status"] == "interrupted"
+        assert len(store.run(run["id"])["results"]) == 1
+
+    try:
+        asyncio.run(check())
+    finally:
+        shutdown_requested.clear()
