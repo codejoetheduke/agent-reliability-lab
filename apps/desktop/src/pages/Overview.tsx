@@ -1,4 +1,6 @@
-import { Box, Button, Card, Chip, Divider, Stack, Typography } from '@mui/material';
+import { useRuns } from '../hooks/useRuns';
+import { formatRate, formatTime } from '../api/evaluation';
+import { Alert, Box, Button, Card, Chip, Divider, Stack, Typography } from '@mui/material';
 import ScienceOutlined from '@mui/icons-material/ScienceOutlined';
 import VerifiedUserOutlined from '@mui/icons-material/VerifiedUserOutlined';
 import SpeedRounded from '@mui/icons-material/SpeedRounded';
@@ -11,7 +13,7 @@ import type { Page } from '../components/Navigation';
 import type { Connection } from '../hooks/useHealth';
 import { md3 } from '../theme';
 
-const metrics = [
+const metricDefinitions = [
   {
     label: 'Evaluation runs',
     value: '0',
@@ -30,6 +32,34 @@ export function Overview({
   connection: Connection;
   onNavigate: (page: Page) => void;
 }) {
+  const history = useRuns();
+  const stats = history.overview;
+  const summary = stats?.metric_run?.summary;
+  const metrics = metricDefinitions.map((item, index) => ({
+    ...item,
+    value:
+      index === 0
+        ? stats
+          ? String(stats.run_count)
+          : '�'
+        : index === 1
+          ? formatRate(summary?.pass_rate)
+          : index === 2
+            ? formatTime(summary?.latency_ms.median)
+            : summary?.estimated_cost_usd == null
+              ? '�'
+              : `$${summary.estimated_cost_usd.toFixed(4)}`,
+    detail:
+      index === 0
+        ? 'Recorded experiments'
+        : index === 1
+          ? summary
+            ? `${summary.pass_rate.numerator}/${summary.pass_rate.denominator} labeled checks`
+            : 'Awaiting your first run'
+          : index === 2
+            ? 'Latest completed run'
+            : 'Estimated when pricing is configured',
+  }));
   const environment = [
     ['Operating mode', 'Mock / isolated'],
     [
@@ -45,6 +75,11 @@ export function Overview({
   ];
   return (
     <>
+      {history.error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {history.error}
+        </Alert>
+      )}
       <Box className="metrics-grid" component="section" aria-label="Recorded metrics">
         {metrics.map(({ label, value, detail, icon: Icon }, index) => (
           <Card
@@ -76,12 +111,27 @@ export function Overview({
       <Box className="content-grid">
         <Panel
           title="Recent experiments"
-          action={<Chip label="0 runs" variant="outlined" size="small" />}
+          action={
+            <Chip label={`${stats?.run_count ?? '�'} runs`} variant="outlined" size="small" />
+          }
         >
-          <EmptyState icon={ScienceOutlined} title="Your experiments start here">
-            Run history and measured results will appear here once the evaluation engine is
-            available.
-          </EmptyState>
+          {history.runs.length ? (
+            <Box sx={{ p: 3 }}>
+              {history.runs.slice(0, 3).map((run) => (
+                <Box key={run.id} sx={{ py: 1.5 }}>
+                  <Typography variant="h3">{run.label}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {run.status} � {run.summary?.tests_completed ?? 0}/{run.total_tests} cases �{' '}
+                    {run.simulated ? 'Simulated' : 'Hosted model'}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          ) : (
+            <EmptyState icon={ScienceOutlined} title="Your experiments start here">
+              Run the synthetic dataset to record measured outcomes and inspect failures.
+            </EmptyState>
+          )}
           <Divider sx={{ mx: 3 }} />
           <Stack
             className="panel-footer"
@@ -89,7 +139,11 @@ export function Overview({
             sx={{ alignItems: 'center', justifyContent: 'space-between', gap: 1, px: 2, py: 1 }}
           >
             <Typography variant="caption" color="text.secondary" sx={{ pl: 1 }}>
-              No most recent run
+              {stats?.latest_run
+                ? `Most recent: ${stats.latest_run.label}`
+                : stats
+                  ? 'No most recent run'
+                  : 'Loading history�'}
             </Typography>
             <Button endIcon={<ArrowForwardRounded />} onClick={() => onNavigate('Run History')}>
               View run history
@@ -135,10 +189,19 @@ export function Overview({
         <Box>
           <Typography variant="h3">Recent failures</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            No test outcomes yet. Failure categories will appear after an evaluation.
+            {stats?.recent_failures.length
+              ? stats.recent_failures.map((item) => `${item.test_id} (${item.category})`).join(', ')
+              : stats?.metric_run
+                ? 'No failed labeled checks in the latest completed run.'
+                : 'No test outcomes yet. Failure categories will appear after an evaluation.'}
           </Typography>
         </Box>
-        <Chip label="No data" variant="outlined" size="small" sx={{ ml: 'auto' }} />
+        <Chip
+          label={stats?.metric_run ? `${stats.recent_failures.length} recent` : 'No data'}
+          variant="outlined"
+          size="small"
+          sx={{ ml: 'auto' }}
+        />
       </Card>
       <Box className="next-step">
         <Box className="next-step-number">02</Box>
@@ -146,18 +209,18 @@ export function Overview({
           <Typography variant="overline" color="primary">
             Up next
           </Typography>
-          <Typography variant="h3">Build the evidence trail</Typography>
+          <Typography variant="h3">Inspect a repeatable experiment</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Synthetic workspace retrieval and a source inspection playground.
+            Run the labeled synthetic dataset and inspect each recorded outcome.
           </Typography>
         </Box>
         <Button
           variant="outlined"
           endIcon={<ArrowForwardRounded />}
-          onClick={() => onNavigate('Agent Playground')}
+          onClick={() => onNavigate('Evaluations')}
           sx={{ ml: 'auto' }}
         >
-          Explore playground
+          Run evaluations
         </Button>
       </Box>
     </>

@@ -58,7 +58,9 @@ test('compact layout remains usable', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'No recorded runs' })).toBeVisible();
 });
 
-test('synthetic playground answers with inspectable sources and abstains on conflicts', async ({ page }) => {
+test('synthetic playground answers with inspectable sources and abstains on conflicts', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('navigation').getByRole('button', { name: 'Agent Playground' }).click();
   await page.getByRole('textbox', { name: 'Ask your workspace' }).fill('Who owns Atlas?');
@@ -70,4 +72,30 @@ test('synthetic playground answers with inspectable sources and abstains on conf
   await page.getByRole('button', { name: 'Send question' }).click();
   await expect(page.getByRole('alert')).toContainText('conflicting information');
   await expect(page.getByRole('heading', { name: 'Cedar budget meeting' })).toBeVisible();
+});
+
+test('evaluation results are inspectable, persisted, and deleted only after confirmation', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page
+    .getByRole('navigation')
+    .getByRole('button', { name: 'Evaluations', exact: true })
+    .click();
+  await page.getByRole('textbox', { name: 'Run label' }).fill('E2E baseline');
+  await page.getByRole('button', { name: 'Run evaluation', exact: true }).click();
+  const details = page.getByRole('dialog', { name: 'Experiment details' });
+  await expect(details.getByText(/20\/20 tests/)).toBeVisible();
+  await details.getByText('atlas-owner', { exact: true }).click();
+  await expect(details.getByText('Atlas owner is Maya Chen.', { exact: true })).toBeVisible();
+  await details.getByRole('button', { name: 'Close experiment details' }).click();
+  await page.reload();
+  await page.getByRole('navigation').getByRole('button', { name: 'Run History' }).click();
+  await expect(page.getByRole('button', { name: 'Inspect E2E baseline' })).toBeVisible();
+  await page.getByRole('button', { name: 'Delete run history' }).click();
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Inspect E2E baseline' })).toBeVisible();
+  await page.getByRole('button', { name: 'Delete run history' }).click();
+  await page.getByRole('button', { name: 'Delete history', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'No recorded runs' })).toBeVisible();
 });

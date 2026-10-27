@@ -22,6 +22,18 @@ def mock_answer(question: str, evidence: list[Record]) -> AgentAnswer:
     if "who" in question.lower().split():
         requested.add("owner")
     candidates = []
+    project_names = {
+        fact.subject.split("/")[0].lower() for record in evidence for fact in record.facts
+    }
+    if len(project_names) > 1 and not project_names & query:
+        return AgentAnswer(
+            answer=(
+                "The project reference is ambiguous. Specify a project before relying on an answer."
+            ),
+            abstained=True,
+            reason="insufficient_evidence",
+            sources=evidence,
+        )
     for record in evidence:
         for fact in record.facts:
             if "/" in fact.subject:

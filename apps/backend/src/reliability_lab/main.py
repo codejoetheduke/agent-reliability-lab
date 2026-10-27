@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -9,11 +10,22 @@ from starlette.exceptions import HTTPException
 
 from reliability_lab.agent import Agent
 from reliability_lab.domain import AgentAnswer, QueryRequest
+from reliability_lab.routes import router
 from reliability_lab.schemas import ErrorResponse, HealthResponse
+from reliability_lab.storage import get_store
 from reliability_lab.workspace import SyntheticWorkspace
 
 logger = logging.getLogger("reliability_lab")
-app = FastAPI(title="Agent Reliability Lab", version="0.1.0", docs_url="/docs")
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    get_store().recover()
+    yield
+
+
+app = FastAPI(title="Agent Reliability Lab", version="0.1.0", docs_url="/docs", lifespan=lifespan)
+app.include_router(router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

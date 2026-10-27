@@ -1,8 +1,8 @@
+import { Evaluations } from './Evaluations';
+import { RunHistory } from './RunHistory';
 import { Playground } from './Playground';
-import { Box, Chip, Typography } from '@mui/material';
-import ScienceOutlined from '@mui/icons-material/ScienceOutlined';
+import { Box, Typography } from '@mui/material';
 import CompareArrowsRounded from '@mui/icons-material/CompareArrowsRounded';
-import HistoryRounded from '@mui/icons-material/HistoryRounded';
 import SettingsOutlined from '@mui/icons-material/SettingsOutlined';
 import { EmptyState, Panel } from '../components/Panel';
 import type { Page } from '../components/Navigation';
@@ -15,17 +15,7 @@ export function WorkspacePage({
   statusText: string;
 }) {
   if (page === 'Agent Playground') return <Playground />;
-  if (page === 'Evaluations')
-    return (
-      <Panel
-        title="Evaluation datasets"
-        action={<Chip label="Milestone 3" variant="outlined" size="small" />}
-      >
-        <EmptyState icon={ScienceOutlined} title="No datasets installed">
-          Versioned synthetic cases and the evaluation runner arrive in Milestone 3.
-        </EmptyState>
-      </Panel>
-    );
+  if (page === 'Evaluations') return <Evaluations />;
   if (page === 'Model Comparison')
     return (
       <Panel title="Compare completed runs" action={<CompareArrowsRounded color="secondary" />}>
@@ -35,17 +25,7 @@ export function WorkspacePage({
         </EmptyState>
       </Panel>
     );
-  if (page === 'Run History')
-    return (
-      <Panel
-        title="All experiments"
-        action={<Chip label="0 runs" variant="outlined" size="small" />}
-      >
-        <EmptyState icon={HistoryRounded} title="No recorded runs">
-          This workspace has no experiments yet. Nothing has been simulated or executed.
-        </EmptyState>
-      </Panel>
-    );
+  if (page === 'Run History') return <RunHistory />;
   const settings = [
     ['Application mode', 'Mock · no external calls'],
     ['Local backend', statusText],
